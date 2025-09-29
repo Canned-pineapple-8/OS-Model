@@ -1,11 +1,28 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
+*.so
+.Python
+
+# Virtual environments
 .venv/
+venv/
 env/
+.venv
 .env
+
+# IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи и базы данных
 *.log
+*.sqlite3
 *.db
