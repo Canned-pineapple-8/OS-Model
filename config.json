@@ -1,0 +1,8 @@
+{
+    "total_memory": 2048,
+    "proc_table_size": 10,
+    "speed": 1.0,
+    "speed_multiplier": 0.1,
+    "min_speed": 0.1,
+    "max_speed": 1000
+}
