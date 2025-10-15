@@ -1,24 +1,17 @@
-from OSModel import OSModel
+from OSModel import OSModel, generate_new_task
 from UI import OSUI
 import threading
+from EventBus import *
 
 
 def main():
     # инициализация модели, параметры - в config.json
     path_to_config = "config.json"
-    os_model = OSModel(path_to_config)
+    event_bus = EventBus()
+    os_model = OSModel(config_path=path_to_config, event_bus=event_bus)
 
     if not os_model.running:
         print(f"Ошибка при запуске моделирования. Проверьте наличие конфигурационного файла {path_to_config}.")
-        return
-
-    # генерация и загрузка одного процесса
-    process = os_model.generate_new_task(memory=50)
-    try:
-        os_model.load_new_task(process)
-        pass
-    except RuntimeError as e:
-        print(f"Ошибка при загрузке процесса: {e}")
         return
 
     # инициализация интерфейса (в отдельном потоке)
@@ -29,13 +22,12 @@ def main():
     try:
         while os_model.running:
             try:
+                os_model.fill_processes_if_possible()
                 # выполнение такта активного процесса (первый в очереди)
-                os_model.execute_current_process()
+                os_model.perform_tick()
             except RuntimeError as e:
                 print(f"Ошибка при выполнении активного процесса: {e}")
                 return
-
-
             # выполнение программной задержки
             os_model.perform_program_delay()
     except KeyboardInterrupt:
