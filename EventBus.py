@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from typing import Callable
 
+
 class EventType(Enum):
     PROCESS_CREATED = 0
     PROCESS_TERMINATED = 1

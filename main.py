@@ -1,4 +1,4 @@
-from OSModel import OSModel, generate_new_task
+from OSModel import OSModel
 from UI import OSUI
 import threading
 from EventBus import *

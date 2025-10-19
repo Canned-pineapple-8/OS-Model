@@ -49,6 +49,10 @@ class OSUI:
             col.frame.grid_propagate(False)
             self.cpu_columns.append(col)
 
+        # Метка скорости
+        self.speed_label = tk.Label(self.root, text=f"Скорость: {self.os_model.speed:.2f} тактов/сек")
+        self.speed_label.pack(pady=5)
+
         # Текстовое поле для истории команд (внизу)
         self.text_area = tk.Text(self.root, height=10, state=tk.DISABLED)
         self.text_area.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -58,9 +62,6 @@ class OSUI:
         self.command_entry.pack(fill=tk.X, padx=5, pady=(0,5))
         self.command_entry.bind("<Return>", self.process_command)
 
-        # Метка скорости
-        self.speed_label = tk.Label(self.root, text=f"Скорость: {self.os_model.speed:.2f} тактов/сек")
-        self.speed_label.pack(pady=5)
 
         # Запуск автообновления
         self.running = True

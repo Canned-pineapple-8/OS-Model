@@ -12,41 +12,6 @@ import random
 from EventBus import *
 import threading
 
-
-def generate_new_task(memory: int = -1, regular_commands_size: int = -1,
-                      io_commands_percentage: float = -1.0, priority: int = -1) -> Process:
-    """
-    Генерация нового процесса с возможностью случайной инициализации параметров.
-
-    :param memory: объём памяти процесса (если -1 — сгенерируется случайно)
-    :param regular_commands_size: количество команд CPU (если -1 — случайно)
-    :param io_commands_percentage: доля I/O команд (если -1.0 — случайно)
-    :param priority: приоритет (если -1 — случайно)
-    :return: экземпляр Process
-    """
-
-    if memory == -1:
-        memory = random.randint(10, 500)
-
-    if regular_commands_size == -1:
-        regular_commands_size = random.randint(1, 3)
-
-    if io_commands_percentage == -1.0:
-        io_commands_percentage = round(random.uniform(0.0, 0.5), 2)
-
-    if priority == -1:
-        priority = random.randint(0, 10)
-
-    new_process = Process(
-        memory=memory,
-        regular_commands_size=regular_commands_size,
-        io_commands_percentage=io_commands_percentage,
-        priority=priority
-    )
-
-    return new_process
-
-
 class OSModel:
     def __init__(self, config_path: str, event_bus: EventBus) -> None:
         """
