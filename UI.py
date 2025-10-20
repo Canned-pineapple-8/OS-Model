@@ -1,10 +1,11 @@
 import tkinter as tk
 from OSModel import OSModel
-from Process import ProcessState, Process
 
 
 class CPUColumn:
-    """Колонка информации для одного ЦП"""
+    """
+    Колонка информации для одного ЦП
+    """
     def __init__(self, parent, cpu_name):
         self.frame = tk.Frame(parent, bd=1, relief=tk.SOLID, padx=5, pady=5)
         self.frame.config(width=250, height=200)
@@ -62,10 +63,9 @@ class OSUI:
         self.command_entry.pack(fill=tk.X, padx=5, pady=(0,5))
         self.command_entry.bind("<Return>", self.process_command)
 
-
         # Запуск автообновления
         self.running = True
-        self.start_auto_update(interval=100)
+        self.start_auto_update(interval=1)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
 
@@ -74,7 +74,7 @@ class OSUI:
 
         for i, col in enumerate(self.cpu_columns):
             try:
-                process = self.os_model.cpus[i].get_current_process()  # <-- вставь свои поля из модели
+                process = self.os_model.cpus[i].current_process
                 if process is None:
                     process_info = {
                         "PID": "-",
@@ -88,8 +88,8 @@ class OSUI:
                     process_info = {
                         "PID": process.pid,
                         "Память": process.memory,
-                        "Всего команд": process.regular_commands_size,
-                        "Счетчик команд": process.regular_commands_counter,
+                        "Всего команд": process.commands_size,
+                        "Счетчик команд": process.commands_counter,
                         "Приоритет": process.priority,
                         "Состояние": process.current_state
                     }
@@ -98,7 +98,7 @@ class OSUI:
                 self.append_text(f"Ошибка CPU {i+1}: {e}")
             col.update_info(process_info)
 
-    def start_auto_update(self, interval=100):
+    def start_auto_update(self, interval=1):
         self.update_ui()
         if self.running:
             self.root.after(interval, self.start_auto_update, interval)

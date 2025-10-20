@@ -1,23 +1,18 @@
 from collections import deque
 from Process import Process, ProcessState
 from CPU import CPU, CPUState
-from EventBus import *
 from typing import Optional
 
+
 class Scheduler:
-    def __init__(self, cpus: list[CPU], event_bus: EventBus) -> None:
+    def __init__(self) -> None:
         """
-        Инициализация параметров планировщика (скорость исполнения и ее размер)
-        :param config: словарь json-параметров, результат работы json.load
+        Инициализация планировщика (пустой очереди процессов)
         """
         self.process_queue = deque()  # очередь на исполнение процессов: deque [Process]
-        self.cpus = cpus
-        self.event_bus = event_bus
-        event_bus.subscribe(EventType.PROCESS_CREATED, self.add_to_queue)
-        # event_bus.subscribe(EventType.PROCESS_TERMINATED, self.dispatch)
         return
 
-    def add_to_queue(self, process: Process) -> None:
+    def add_process_to_queue(self, process: Process) -> None:
         """
         Добавляет новый процесс в очередь. Проверки на допустимое количество процессов нет, т.к. это возлагается
         на вызывающий метод
@@ -28,24 +23,44 @@ class Scheduler:
             self.process_queue.append(process)
         return
 
-    def _remove_from_queue(self) -> Optional[Process]:
+    def get_process_from_queue(self) -> Optional[Process]:
         """
-        Удаляет процесс из очереди.
-        :return: экземпляр удалённого из очереди Process
+        Извлекает следующий на исполнение процесс из головы очереди
+        :return:
         """
         if not self.process_queue:
             return None
         process = self.process_queue.popleft()
         return process
 
-    def dispatch(self) -> None:
+    def load_task(self, cpu:CPU, process: Process) -> None:
         """
-        Проверяет, все ли процессоры заняты. Если есть свободные, назначет им новый процесс на исполнение.
+        Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
+        :param cpu: процессор, в который будет загружена задача
+        :param process: процесс для загрузки
         """
-        for cpu in self.cpus:
-            if cpu.current_state is CPUState.IDLE and self.process_queue:
-                next_process = self._remove_from_queue()
-                cpu.load_task(next_process)
+        cpu.current_process = process
+        cpu.current_process.current_state = ProcessState.RUNNING
+        cpu.current_state = CPUState.RUNNING
         return
 
+    def unload_task(self, cpu:CPU) -> Process:
+        """
+        Освобождает переданный ЦП от текущего процесса
+        :param cpu: процессор для освобождения
+        :return: старый выгруженный процесс
+        """
+        cpu.current_process.current_state = ProcessState.TERMINATED
+        old_process = cpu.current_process
+        cpu.current_process = None
+        cpu.current_state = CPUState.IDLE
+        return old_process
 
+    def dispatch(self, cpu:CPU) -> None:
+        """
+        Проверяет состояние процессора и загружает его новым процессом при необходимости
+        :param cpu: ЦП для проверки
+        """
+        if cpu.current_state is CPUState.IDLE and self.process_queue:
+            next_process = self.get_process_from_queue()
+            self.load_task(cpu, next_process)

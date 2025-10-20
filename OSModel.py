@@ -5,15 +5,11 @@ from Speed import Speed
 from Scheduler import Scheduler
 from CPU import CPU
 from RandomFactory import ProcessFactory
-import json
-import os
-import time
-import random
-from EventBus import *
-import threading
+import json, os, time, threading
+
 
 class OSModel:
-    def __init__(self, config_path: str, event_bus: EventBus) -> None:
+    def __init__(self, config_path: str) -> None:
         """
         Инициализация модели ОС из JSON-файла.
         :param config_path: путь к JSON-файлу с параметрами
@@ -31,9 +27,6 @@ class OSModel:
                 print(f"Ошибка чтения JSON-файла '{config_path}'. Будут загружены значения по умолчанию.")
                 config = dict()
 
-        self.event_bus = event_bus
-        self.event_bus.subscribe(EventType.PROCESS_TERMINATED, self.remove_process_from_process_table)
-
         self._lock = threading.Lock()
 
         # инициализация параметров из JSON
@@ -44,9 +37,10 @@ class OSModel:
 
         # инициализация основных структур модели
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
-        self.cpus = [CPU(self.event_bus) for _ in range(cpus_num)]
-        self.speed_manager = Speed(config)  # инициализация параметров, связанных со скоростью (делегируется классу Speed)
-        self.scheduler = Scheduler(self.cpus, self.event_bus)  # инициализация планировщика и его структур
+        self.cpus = [CPU() for _ in range(cpus_num)]
+        self.speed_manager = Speed(config)  # инициализация параметров, связанных со скоростью
+        # (делегируется классу Speed)
+        self.scheduler = Scheduler()  # инициализация планировщика и его структур
         self.running = True
         return
 
@@ -63,11 +57,6 @@ class OSModel:
         """
         new_speed = self.speed_manager.change_speed(increase)
         return new_speed
-
-    @property
-    def process_queue(self) -> deque:
-        """Геттер для очереди"""
-        return self.scheduler.process_queue
 
     def calculate_memory_usage(self) -> int:
         """
@@ -98,7 +87,8 @@ class OSModel:
 
         with self._lock:
             self.proc_table[process.pid] = process
-        self.event_bus.emit(EventType.PROCESS_CREATED, process=process)
+        self.scheduler.add_process_to_queue(process=process)
+
         return process.pid
 
     def perform_program_delay(self) -> None:
@@ -119,7 +109,6 @@ class OSModel:
         """
         with self._lock:
             self.proc_table.clear()
-        self.process_queue.clear()
         self.running = False
         return
 
@@ -149,7 +138,10 @@ class OSModel:
         - каждый ЦП выполняет один такт назначенного ему процесса
         :return:
         """
-        self.scheduler.dispatch()
         for cpu in self.cpus:
-            cpu.execute_tick()
+            self.scheduler.dispatch(cpu)
+            cur_proc_commands_left = cpu.execute_tick()
+            if cur_proc_commands_left <= 0:
+                old_process = self.scheduler.unload_task(cpu)
+                self.remove_process_from_process_table(old_process.pid)
         return

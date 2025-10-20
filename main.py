@@ -1,14 +1,12 @@
 from OSModel import OSModel
 from UI import OSUI
 import threading
-from EventBus import *
 
 
 def main():
     # инициализация модели, параметры - в config.json
     path_to_config = "config.json"
-    event_bus = EventBus()
-    os_model = OSModel(config_path=path_to_config, event_bus=event_bus)
+    os_model = OSModel(config_path=path_to_config)
 
     if not os_model.running:
         print(f"Ошибка при запуске моделирования. Проверьте наличие конфигурационного файла {path_to_config}.")
