@@ -20,13 +20,13 @@ class Process:
         self.pid = Process.free_pid  # свободное значение PID Для новых процессов
         Process.free_pid += 1
         self.memory = memory
-        self.regular_commands_size = regular_commands_size
+        self.commands_size = regular_commands_size
         self.io_commands_percentage = io_commands_percentage
         self.priority = priority
 
         self._current_state = ProcessState.NEW
 
-        self.regular_commands_counter = 0
+        self.commands_counter = 0
         self.io_commands_counter = 0
         return
 
@@ -41,16 +41,11 @@ class Process:
         self._current_state = state
         return
 
-    def execute_tick(self) -> None:
+    def execute_tick(self) -> int:
         """
         Выполнить такт процесса (увеличение счётчика команд процесса на единицу)
         :return:
         """
-        if self.regular_commands_size <= 0:
-            self.current_state = ProcessState.TERMINATED
-            return
-        self.regular_commands_counter += 1
-        if self.regular_commands_counter >= self.regular_commands_size:
-            self.current_state = ProcessState.TERMINATED
-        return
+        self.commands_counter += 1
+        return self.commands_size - self.commands_counter
 
