@@ -3,7 +3,7 @@ from collections import deque
 from Process import Process
 from Speed import Speed
 from Scheduler import Scheduler
-from CPU import CPU
+from CPU import CPU, CPUState
 from RandomFactory import ProcessFactory
 import json, os, time, threading
 
@@ -16,6 +16,27 @@ class OSModel:
         """
         self.running = False
 
+        config = self.read_json(config_path)
+
+        self._lock = threading.Lock()
+
+        # инициализация параметров из JSON
+        self.total_memory = config.get("total_memory", 1024)  # общая память модели
+        self.proc_table_size = config.get("proc_table_size",
+                                          10)  # максимальное число процессов (объем таблицы слов состояний процессов)
+        cpus_num = config.get("cpus_num", 3)  # количество процессоров
+        quantum_size = config.get("quantum_size", 4)  # размер кванта времени (в тактах)
+
+        # инициализация основных структур модели
+        self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
+        self.cpus = [CPU() for _ in range(cpus_num)]
+        self.speed_manager = Speed(config)  # инициализация параметров, связанных со скоростью
+        # (делегируется классу Speed)
+        self.scheduler = Scheduler(self.proc_table, quantum_size)  # инициализация планировщика и его структур
+        self.running = True
+        return
+
+    def read_json(self, config_path:str) -> dict:
         if not os.path.exists(config_path):
             print(f"Файл конфигурации '{config_path}' не найден. Будут загружены значения по умолчанию.")
             config = dict()
@@ -26,23 +47,7 @@ class OSModel:
             except json.JSONDecodeError:
                 print(f"Ошибка чтения JSON-файла '{config_path}'. Будут загружены значения по умолчанию.")
                 config = dict()
-
-        self._lock = threading.Lock()
-
-        # инициализация параметров из JSON
-        self.total_memory = config.get("total_memory", 1024)  # общая память модели
-        self.proc_table_size = config.get("proc_table_size",
-                                          10)  # максимальное число процессов (объем таблицы слов состояний процессов)
-        cpus_num = config.get("cpus_num", 3)  # количество процессоров
-
-        # инициализация основных структур модели
-        self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
-        self.cpus = [CPU() for _ in range(cpus_num)]
-        self.speed_manager = Speed(config)  # инициализация параметров, связанных со скоростью
-        # (делегируется классу Speed)
-        self.scheduler = Scheduler()  # инициализация планировщика и его структур
-        self.running = True
-        return
+        return config
 
     @property
     def speed(self) -> float:
@@ -87,7 +92,7 @@ class OSModel:
 
         with self._lock:
             self.proc_table[process.pid] = process
-        self.scheduler.add_process_to_queue(process=process)
+        self.scheduler.add_process_to_queue(process_pid=process.pid)
 
         return process.pid
 
@@ -140,8 +145,10 @@ class OSModel:
         """
         for cpu in self.cpus:
             self.scheduler.dispatch(cpu)
-            cur_proc_commands_left = cpu.execute_tick()
-            if cur_proc_commands_left <= 0:
-                old_process = self.scheduler.unload_task(cpu)
-                self.remove_process_from_process_table(old_process.pid)
+            if cpu.current_state is CPUState.RUNNING:
+                cur_proc_commands_left = cpu.execute_tick()
+                if cur_proc_commands_left <= 0:
+                    old_process_pid = self.scheduler.unload_task(cpu)
+                    self.remove_process_from_process_table(old_process_pid)
+                    self.scheduler.dispatch(cpu)
         return

@@ -14,6 +14,8 @@ class CPU:
     def __init__(self) -> None:
         self.current_state = CPUState.IDLE
         self.current_process: Optional[Process] = None
+
+        self.ticks_executed = 0
         self.total_commands_executed = 0
         return
 
@@ -26,4 +28,5 @@ class CPU:
             return -1
         commands_left = self.current_process.execute_tick()
         self.total_commands_executed += 1
+        self.ticks_executed += 1
         return commands_left
