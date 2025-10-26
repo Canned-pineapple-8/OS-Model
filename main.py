@@ -16,7 +16,9 @@ def main():
     ui_thread = threading.Thread(target=OSUI, args=(os_model,))
     ui_thread.start()
 
-    # соновной цикл моделирования ОС
+    # os_model.fill_processes_if_possible()
+
+    # оcновной цикл моделирования ОС
     try:
         while os_model.running:
             try:
