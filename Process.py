@@ -27,7 +27,6 @@ class Process:
         self.memory = memory
         self.commands_size = regular_commands_size
         self.io_commands_percentage = io_commands_percentage
-        self.priority = priority
 
         self._current_state = ProcessState.NEW
 

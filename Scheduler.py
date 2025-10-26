@@ -10,8 +10,8 @@ class Scheduler:
         Инициализация планировщика (пустой очереди процессов)
         """
         self.process_queue = deque()  # очередь на исполнение процессов: deque [Process]
-        self.proc_table_ptr = proc_table # ссылка на таблицу процессов
-        self.quantum_size = quantum_size
+        self.proc_table_ptr = proc_table  # ссылка на таблицу процессов
+        self.quantum_size = quantum_size  # размер кванта времени в тактах моделирования
         return
 
     def change_process_state(self, process: Process, new_process_state: ProcessState) -> None:
