@@ -145,10 +145,5 @@ class OSModel:
         """
         for cpu in self.cpus:
             self.scheduler.dispatch(cpu)
-            if cpu.current_state is CPUState.RUNNING:
-                cur_proc_commands_left = cpu.execute_tick()
-                if cur_proc_commands_left <= 0:
-                    old_process_pid = self.scheduler.unload_task(cpu)
-                    self.remove_process_from_process_table(old_process_pid)
-                    self.scheduler.dispatch(cpu)
+            cpu.execute_tick()
         return

@@ -11,7 +11,7 @@ class ProcessFactory:
         if memory == -1:
             memory = random.randint(10, 500)
         if regular_commands_size == -1:
-            regular_commands_size = random.randint(5, 10)
+            regular_commands_size = random.randint(1, 7)
         if io_commands_percentage == -1.0:
             io_commands_percentage = round(random.uniform(0.0, 0.5), 2)
         if priority == -1:
