@@ -3,7 +3,7 @@ from Process import Process, ProcessState
 from typing import Optional
 
 
-# класс-перечисления состояний процессора
+# класс-перечисление состояний процессора
 class CPUState(Enum):
     IDLE = 0  # простаивает
     RUNNING = 1  # работает
