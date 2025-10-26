@@ -23,7 +23,7 @@ class Scheduler:
         на вызывающий метод
         :param process: процесс для добавления
         """
-        # ??? process = ready
+        self.change_process_state(self.proc_table_ptr[process_pid], ProcessState.READY)
         self.process_queue.append(process_pid)
         return
 
@@ -44,9 +44,14 @@ class Scheduler:
     def restore_process_state_word(self, process_pid:int) -> Process:
         return self.proc_table_ptr[process_pid]
 
+    def load_task_from_queue(self, cpu:CPU) -> None:
+        next_process = self.get_process_from_queue()
+        self.load_task(cpu, next_process)
+
     def load_task(self, cpu:CPU, process_pid:int) -> None:
         """
         Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
+        :param process_pid:
         :param cpu: процессор, в который будет загружена задача
         :param process: процесс для загрузки
         """
@@ -73,14 +78,19 @@ class Scheduler:
         Проверяет состояние процессора и загружает его новым процессом при необходимости
         :param cpu: ЦП для проверки
         """
-        if cpu.current_state is CPUState.RUNNING and cpu.ticks_executed >= self.quantum_size:
-            self.change_process_state(cpu.current_process, ProcessState.READY)
-            unloaded_process_pid = self.unload_task(cpu)
-            self.add_process_to_queue(unloaded_process_pid)
-            cpu.ticks_executed = 0
-        if cpu.current_state is CPUState.IDLE and self.process_queue:
-            next_process = self.get_process_from_queue()
-            self.load_task(cpu, next_process)
+        if cpu.current_state is CPUState.RUNNING:
+            if cpu.ticks_executed >= self.quantum_size:
+                self.change_process_state(cpu.current_process, ProcessState.READY)
+                unloaded_process_pid = self.unload_task(cpu)
+                self.add_process_to_queue(unloaded_process_pid)
+                cpu.ticks_executed = 0
+                self.load_task_from_queue(cpu)
+            elif cpu.is_process_finished():
+                unloaded_process_pid = self.unload_task(cpu)
+                self.proc_table_ptr.pop(unloaded_process_pid, None)
+                self.load_task_from_queue(cpu)
+        elif cpu.current_state is CPUState.IDLE and self.process_queue:
+            self.load_task_from_queue(cpu)
 
 
 

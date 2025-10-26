@@ -19,14 +19,24 @@ class CPU:
         self.total_commands_executed = 0
         return
 
-    def execute_tick(self) -> int:
+    def execute_tick(self) -> None:
         """
         Выполняет один такт текущего процесса (вызывает соответствующий метод процесса)
         :return: количество оставшихся команд процесса (для отслеживания, выполнен он или нет)
         """
         if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
-            return -1
-        commands_left = self.current_process.execute_tick()
+            return
+        self.current_process.execute_tick()
         self.total_commands_executed += 1
         self.ticks_executed += 1
-        return commands_left
+
+    def is_process_finished(self) -> bool:
+        """
+        Проверяет, выполнен ли текущий процесс ЦП
+        :return: bool (True если выполнен/не загружен)
+        """
+        if self.current_process is None:
+            return True
+        if self.current_process.current_state == ProcessState.TERMINATED:
+            return True
+        return False
