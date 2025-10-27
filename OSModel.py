@@ -131,7 +131,7 @@ class OSModel:
         Заполняет память новыми процессами до достижения лимита.
         """
         new_process_memory = 10
-        while self.calculate_available_memory() > new_process_memory:
+        while self.calculate_available_memory() > new_process_memory and len(self.proc_table) < self.proc_table_size:
             new_process = ProcessFactory.create(memory=new_process_memory)
             self.load_new_task(new_process)
         return
