@@ -1,6 +1,9 @@
 from enum import Enum, auto
 from Process import Process, ProcessState
+from Command import *
 from typing import Optional
+from Memory import *
+from ALU import ALU
 
 
 # класс-перечисление состояний процессора
@@ -11,13 +14,21 @@ class CPUState(Enum):
 
 
 class CPU:
-    def __init__(self) -> None:
+    def __init__(self, memory_ptr: Memory) -> None:
         self.current_state = CPUState.IDLE
         self.current_process: Optional[Process] = None
 
         self.ticks_executed = 0
         self.total_commands_executed = 0
+
+        self.memory_ptr = memory_ptr
         return
+
+    def read_operand(self, addr: int) -> int:
+        return self.memory_ptr.read(addr)
+
+    def write_result(self, value: int, addr: int) -> None:
+        self.memory_ptr.write(value, addr)
 
     def execute_tick(self) -> None:
         """
@@ -26,9 +37,29 @@ class CPU:
         """
         if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
             return
-        self.current_process.execute_tick()
+        command = self.current_process.generate_command()
+        match command:
+            case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):
+                op_1 = self.read_operand(addr1)
+                op_2 = self.read_operand(addr2)
+                result = ALU.execute_operation(operation_type=opType, operand_1=op_1, operand_2=op_2)
+                self.write_result(result, self.current_process.command_result_address)
+                self.current_process.commands_counter += 1
+            case ExitCommand():
+                self.current_process.current_state = ProcessState.TERMINATED
+            case IOCommand():
+                self.current_process.current_state = ProcessState.IO_INIT
+                self.current_process.commands_counter += 1
+
         self.total_commands_executed += 1
         self.ticks_executed += 1
+
+    def is_process_awaits_IO(self) -> bool:
+        if self.current_process is None:
+            return False
+        if self.current_process.current_state == ProcessState.IO_INIT:
+            return True
+        return False
 
     def is_process_finished(self) -> bool:
         """

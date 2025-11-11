@@ -8,10 +8,10 @@ class MemoryManager:
         Инициализация менеджера памяти
         :param memory_ptr: указатель на структуру физической памяти
         """
-        # таблица сегментов - структура типа Dict[адрес_начала_блока, Tuple[Optional[PID_процесса], размер_блока]
-        self.memory_map: Dict[int, Tuple[Optional[int], int]] = dict()
         self.memory_ptr = memory_ptr
         self.available_memory = self.memory_ptr.physical_memory_size
+        # таблица сегментов - структура типа Dict[адрес_начала_блока, Tuple[Optional[PID_процесса], размер_блока]
+        self.memory_map: Dict[int, Tuple[Optional[int], int]] = dict([(0, (None,self.available_memory))])
 
     def find_free_block(self, req_size: int) -> Tuple[Optional[int], Optional[int]]:
         """
@@ -28,11 +28,11 @@ class MemoryManager:
                 raise RuntimeError("Таблица сегментов повреждена")
             if self.memory_map[index][0] is None:
                 if self.memory_map[index][1] >= req_size:
-                    return self.memory_map[index]
+                    return index, self.memory_map[index][1]
             index += self.memory_map[index][1]
         return None, None
 
-    def allocate_memory_for_process(self, process_pid: int, req_size: int) -> None:
+    def allocate_memory_for_process(self, process_pid: int, req_size: int) -> int:
         """
         Выделение памяти под новый процесс
         :param process_pid: PID процесса, который должен быть размещен
@@ -47,6 +47,7 @@ class MemoryManager:
             self.memory_map[address + req_size] = (None, free_block_size - req_size)
 
         self.update_available_memory(0 - req_size)
+        return address
 
     def free_memory_from_process(self, process_pid: int) -> None:
         """

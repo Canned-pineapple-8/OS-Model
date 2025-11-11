@@ -6,7 +6,8 @@ class ALU:
     """
     Класс-реализация АЛУ
     """
-    def execute_operation(self, operation_type: OpType, operand_1: int, operand_2: int) -> int:
+    @staticmethod
+    def execute_operation(operation_type: OpType, operand_1: int, operand_2: int) -> int:
         """
         Выполнение арифметической операции над двумя операндами
         :param operation_type: тип операции

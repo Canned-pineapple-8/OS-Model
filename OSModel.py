@@ -1,11 +1,11 @@
 from collections import deque
 
-from Process import Process
 from Speed import Speed
 from Scheduler import Scheduler
 from CPU import CPU, CPUState
-from RandomFactory import ProcessFactory
+from IOController import *
 import json, os, time, threading
+from MemoryManager import MemoryManager
 
 
 class OSModel:
@@ -22,6 +22,8 @@ class OSModel:
 
         # инициализация параметров из JSON
         self.total_memory = config.get("total_memory", 1024)  # общая память модели
+        self.physical_memory = Memory(self.total_memory)
+        self.memory_manager = MemoryManager(self.physical_memory)
         self.proc_table_size = config.get("proc_table_size",
                                           10)  # максимальное число процессов (объем таблицы слов состояний процессов)
         cpus_num = config.get("cpus_num", 3)  # количество процессоров
@@ -29,7 +31,8 @@ class OSModel:
 
         # инициализация основных структур модели
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
-        self.cpus = [CPU() for _ in range(cpus_num)]
+        self.cpus = [CPU(self.physical_memory) for _ in range(cpus_num)]
+        self.io_controllers = [IOController() for _ in range(3)]
         self.speed_manager = Speed(config)  # инициализация параметров, связанных со скоростью
         # (делегируется классу Speed)
         self.scheduler = Scheduler(self.proc_table, quantum_size)  # инициализация планировщика и его структур
@@ -92,7 +95,7 @@ class OSModel:
 
         with self._lock:
             self.proc_table[process.pid] = process
-        self.scheduler.add_process_to_queue(process_pid=process.pid)
+        self.scheduler.cpu_process_manager.add_process_to_queue(process_pid=process.pid)
 
         return process.pid
 
@@ -131,8 +134,15 @@ class OSModel:
         Заполняет память новыми процессами до достижения лимита.
         """
         new_process_memory = 10
+        #     def __init__(self, ph_memory_ptr: Memory, memory: int = 10,
+        #     regular_commands_size: int = 10, io_commands_percentage: float = 0.5) -> None:
         while self.calculate_available_memory() > new_process_memory and len(self.proc_table) < self.proc_table_size:
-            new_process = ProcessFactory.create(memory=new_process_memory)
+            new_process = Process(ph_memory_ptr=self.physical_memory,
+                                  regular_commands_size=RandomFactory.generate_random_int_value(5,10),
+                                  io_commands_percentage=RandomFactory.generate_random_float_value(0.0, 1.0, 1))
+            block_start = self.memory_manager.allocate_memory_for_process(new_process.pid, new_process.memory)
+            new_process.block_start_address = block_start
+            new_process.command_result_address = block_start + 2
             self.load_new_task(new_process)
         return
 
@@ -144,6 +154,9 @@ class OSModel:
         :return:
         """
         for cpu in self.cpus:
-            self.scheduler.dispatch(cpu)
+            self.scheduler.dispatch_cpu(cpu)
             cpu.execute_tick()
+        for io in self.io_controllers:
+            self.scheduler.dispatch_io(io)
+            io.execute_tick()
         return

@@ -1,19 +1,14 @@
 import random
-from Process import Process
 
-
-class ProcessFactory:
+class RandomFactory:
     """
-    Фабрика для генерации случайных процессов.
+    Фабрика для генерации случайных параметров (процессов/команд).
     """
     @staticmethod
-    def create(memory=-1, regular_commands_size=-1, io_commands_percentage=-1.0, priority=-1) -> Process:
-        if memory == -1:
-            memory = random.randint(10, 500)
-        if regular_commands_size == -1:
-            regular_commands_size = random.randint(1, 7)
-        if io_commands_percentage == -1.0:
-            io_commands_percentage = round(random.uniform(0.0, 0.5), 2)
-        if priority == -1:
-            priority = random.randint(0, 10)
-        return Process(memory, regular_commands_size, io_commands_percentage, priority)
+    def generate_random_int_value(min_value: int, max_value: int) -> int:
+        return random.randint(min_value, max_value)
+
+    @staticmethod
+    def generate_random_float_value(min_value:float, max_value: float, round_cnt:int = 2) -> float:
+        return round(random.uniform(min_value, max_value), round_cnt)
+

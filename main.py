@@ -23,7 +23,6 @@ def main():
         while os_model.running:
             try:
                 os_model.fill_processes_if_possible()
-                # выполнение такта активного процесса (первый в очереди)
                 os_model.perform_tick()
             except RuntimeError as e:
                 print(f"Ошибка при выполнении активного процесса: {e}")
