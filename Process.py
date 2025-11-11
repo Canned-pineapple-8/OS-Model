@@ -1,13 +1,5 @@
 from enum import Enum
 
-
-class OpType(Enum):
-    ADD = 0
-    SUB = 1
-    DIV = 2
-    MUL = 3
-
-
 class ProcessState(Enum):
     NEW = 0  # только создан ("загружается")
     READY = 1  # готов к выполнению ("готов")
