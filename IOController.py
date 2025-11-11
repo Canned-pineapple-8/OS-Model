@@ -17,6 +17,8 @@ class IOController:
         self.total_ticks_executed = 0
 
     def execute_tick(self):
+        if self.current_process is None:
+            return
         assert isinstance(self.current_process.current_command, IOCommand)
         self.current_ticks_executed += 1
         self.total_ticks_executed += 1

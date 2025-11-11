@@ -139,7 +139,7 @@ class OSModel:
         while self.calculate_available_memory() > new_process_memory and len(self.proc_table) < self.proc_table_size:
             new_process = Process(ph_memory_ptr=self.physical_memory,
                                   regular_commands_size=RandomFactory.generate_random_int_value(5,10),
-                                  io_commands_percentage=RandomFactory.generate_random_float_value(0.0, 1.0, 1))
+                                  io_commands_percentage=RandomFactory.generate_random_float_value(0.0, 0.3, 1))
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid, new_process.memory)
             new_process.block_start_address = block_start
             new_process.command_result_address = block_start + 2
@@ -153,10 +153,10 @@ class OSModel:
         - каждый ЦП выполняет один такт назначенного ему процесса
         :return:
         """
+        for io in self.io_controllers:
+            io.execute_tick()
+            self.scheduler.dispatch_io(io)
         for cpu in self.cpus:
             self.scheduler.dispatch_cpu(cpu)
             cpu.execute_tick()
-        for io in self.io_controllers:
-            self.scheduler.dispatch_io(io)
-            io.execute_tick()
         return

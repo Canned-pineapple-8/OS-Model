@@ -59,7 +59,7 @@ class Process:
             self.current_command = ExitCommand()
         percent = RandomFactory.generate_random_float_value(0.0, 1.0)
         if percent < self.io_commands_percentage:
-            io_command_length = RandomFactory.generate_random_int_value(3, 5)
+            io_command_length = RandomFactory.generate_random_int_value(1, 2)
             self.current_command = IOCommand(io_command_length)
         else:
             op_1_address = self.block_start_address
