@@ -6,6 +6,9 @@ from typing import *
 
 
 class IOProcessManager:
+    """
+    Класс-регулировщик для процессоров ввода-вывода
+    """
     def __init__(self, proc_table_ptr: Dict[int, Process]):
         self.processes = deque()  # очередь на исполнение процессов: deque [Process]
         self.proc_table_ptr = proc_table_ptr  # ссылка на таблицу процессов
@@ -48,7 +51,7 @@ class IOProcessManager:
     def load_task_from_queue(self, controller:IOController) -> None:
         """
         Извлекает процесс из головы очереди
-        :param cpu: ЦП, которому необходимо загрузить процесс на исполнение
+        :param controller: контроллер ввода-вывода, которому требуется загрузить процесс
         """
         if len(self.processes) > 0:
             next_process = self.get_process_from_queue()
@@ -58,9 +61,9 @@ class IOProcessManager:
 
     def load_task(self, controller:IOController, process_pid:int) -> None:
         """
-        Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
+        Загружает процесс на исполнение переданному контроллеру IO, выставляет необходимые состояния контроллера IO и процесса
+        :param controller: контроллер ввода-вывода, которому необходимо загрузить процесс
         :param process_pid: PID процесса для загрузки
-        :param cpu: процессор, в который будет загружена задача
         """
         process = self.restore_process_state_word(process_pid)
         controller.current_process = process
@@ -68,8 +71,8 @@ class IOProcessManager:
 
     def unload_task(self, controller:IOController) -> int:
         """
-        Освобождает переданный ЦП от текущего процесса
-        :param cpu: процессор для освобождения
+        Освобождает переданный контроллер IO от текущего процесса
+        :param controller: контроллер IO, который необходимо освободить от процесса
         :return: старый выгруженный процесс
         """
         process = controller.current_process
@@ -158,16 +161,20 @@ class CPUProcessManager:
 class Scheduler:
     def __init__(self, proc_table: dict, quantum_size:int) -> None:
         """
-        Инициализация планировщика (пустой очереди процессов)
+        Инициализация планировщика
         """
         self.proc_table_ptr = proc_table  # ссылка на таблицу процессов
         self.quantum_size = quantum_size  # размер кванта времени в тактах моделирования
 
-        self.cpu_process_manager: CPUProcessManager = CPUProcessManager(self.proc_table_ptr)
-        self.io_process_manager: IOProcessManager = IOProcessManager(self.proc_table_ptr)
+        self.cpu_process_manager: CPUProcessManager = CPUProcessManager(self.proc_table_ptr)  # регулировщик ЦПр
+        self.io_process_manager: IOProcessManager = IOProcessManager(self.proc_table_ptr)  # регулировщик контроллеров IO
         return
 
-    def dispatch_io(self, io_controller:IOController):
+    def dispatch_io(self, io_controller:IOController) -> None:
+        """
+        Проверить состояние контроллера IO, распределить процессы при необходимости
+        :param io_controller: IO контроллер
+        """
         if io_controller.current_state == IOControllerState.RUNNING:
             if io_controller.current_process.current_state == ProcessState.IO_END:
                 io_controller.current_ticks_executed = 0
@@ -179,9 +186,8 @@ class Scheduler:
 
     def dispatch_cpu(self, cpu:CPU) -> None:
         """
-        Проверяет состояние процессора, загружает его новым процессом или выгружает старый
-        при необходимости
-        :param cpu: ЦП для проверки
+        Проверить состояние ЦПр, распределить процессы при необходимости
+        :param cpu: ЦПр для проверки
         """
         if cpu.current_state is CPUState.RUNNING:
             if cpu.ticks_executed >= self.quantum_size:

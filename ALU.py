@@ -1,4 +1,3 @@
-from typing import *
 from Command import OpType
 
 

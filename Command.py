@@ -21,7 +21,7 @@ class Command:
     Базовый класс-команда
     """
     def __init__(self, command_type: CommandType):
-        self.type = command_type # тип команды
+        self.type = command_type  # тип команды
 
 
 class ALUCommand(Command):

@@ -1,8 +1,7 @@
 from enum import Enum
 from Memory import Memory
 from RandomFactory import RandomFactory
-from Command import *
-from typing import *
+from Command import Command, IOCommand, ExitCommand, ALUCommand, OpType
 from dataclasses import dataclass
 
 
