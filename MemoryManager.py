@@ -52,7 +52,7 @@ class MemoryManager:
     def free_memory_from_process(self, process_pid: int) -> None:
         """
         Освобождает память от процесса и обновляет свободную память
-        :param process_pid: который нужно удалить из памяти
+        :param process_pid: PID процесса, который нужно удалить из памяти
         """
         if process_pid not in self.memory_map:
             raise RuntimeError(f"Процесса {process_pid} не существует")
