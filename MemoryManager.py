@@ -80,7 +80,7 @@ class MemoryManager:
 
         # создаём новый объединённый свободный блок
         self.memory_map[start_address] = (None, new_size)
-        self.update_available_memory(new_size)
+        self.update_available_memory(process_size)
 
     def update_available_memory(self, value: int) -> None:
         """

@@ -1,16 +1,16 @@
 import json
-
+from Config import *
 
 class Speed:
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: OSConfig) -> None:
         """
         Инициализация параметров скорости (базовая, минимальная/максимальная, множитель)
         :param config: словарь json-параметров, результат работы json.load
         """
-        self.speed = config.get("speed", 1.0)  # скорость моделирования
-        self.speed_multiplier = config.get("speed_multiplier", 0.05)  # множитель для уменьшения/увеличения скорости
-        self.min_speed = config.get("min_speed", 0.1)  # минимальная скорость
-        self.max_speed = config.get("max_speed", 1000)  # максимальная скорость
+        self.speed = config.speed.speed                        # скорость моделирования
+        self.speed_multiplier = config.speed.speed_multiplier  # множитель для уменьшения/увеличения скорости
+        self.min_speed = config.speed.min_speed                # минимальная скорость
+        self.max_speed = config.speed.max_speed                # максимальная скорость
         return
 
     def change_speed(self, increase: bool) -> float:

@@ -1,9 +1,35 @@
 {
+  "memory": {
     "total_memory": 100,
-    "proc_table_size": 10,
+    "proc_table_size": 10
+  },
+
+  "cpu": {
+    "cpus_num" : 3,
+    "quantum_size": 5
+  },
+
+  "io": {
+    "ios_num" : 3
+  },
+
+  "speed": {
     "speed": 1.0,
     "speed_multiplier": 0.1,
     "min_speed": 0.1,
-    "max_speed": 1000,
-    "quantum_size": 5
+    "max_speed": 1000
+  },
+
+  "process_generation": {
+    "min_memory": 10,
+    "total_commands_min": 1,
+    "total_commands_max": 5,
+    "io_percentage_min": 0,
+    "io_percentage_max": 0.5
+  },
+
+  "command_generation": {
+    "operand_min": 1,
+    "operand_max": 10
+  }
 }
