@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 # ---------------- MEMORY ----------------
@@ -51,15 +51,17 @@ class ProcessGenerationConfig:
 class CommandGenerationConfig:
     operand_min: int = 1
     operand_max: int = 10
+    operands_block_shift: int = 0
+    result_block_shift: int = 2
 
 
 # ---------------- ROOT CONFIG ----------------
 
 @dataclass
 class OSConfig:
-    memory: MemoryConfig = MemoryConfig()
-    cpu: CPUConfig = CPUConfig()
-    io: IOConfig = IOConfig()
-    speed: SpeedConfig = SpeedConfig()
-    process_generation: ProcessGenerationConfig = ProcessGenerationConfig()
-    command_generation: CommandGenerationConfig = CommandGenerationConfig()
+    memory: MemoryConfig = field(default_factory=MemoryConfig)
+    cpu: CPUConfig = field(default_factory=CPUConfig)
+    io: IOConfig = field(default_factory=IOConfig)
+    speed: SpeedConfig = field(default_factory=SpeedConfig)
+    process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
+    command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)

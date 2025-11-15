@@ -30,6 +30,8 @@
 
   "command_generation": {
     "operand_min": 1,
-    "operand_max": 10
+    "operand_max": 10,
+    "operands_block_shift": 0,
+    "result_block_shift": 2
   }
 }

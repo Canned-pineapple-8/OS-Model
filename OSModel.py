@@ -1,13 +1,16 @@
-from collections import deque
+import json
+import time
 
+from Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
+    ProcessGenerationConfig, CommandGenerationConfig
 from Speed import Speed
 from Scheduler import Scheduler
 from CPU import CPU, CPUState
-from IOController import *
-import json, os, time, threading
+from IOController import IOController, IOControllerState
 from MemoryManager import MemoryManager
-from Process import *
-from Config import *
+from Process import Process, ProcessCommandsConfig, ProcessMemoryConfig, ProcessStatistics
+from RandomFactory import RandomFactory
+from Memory import Memory
 
 
 class OSModel:
@@ -78,14 +81,14 @@ class OSModel:
 
     def calculate_memory_usage(self) -> int:
         """
-        Вычисление текущей используемой памяти (сумма используемой памяти по всем процессам в таблице процессов)
+        Вычисление текущей используемой памяти (выполняется через MemoryManager)
         :return: размер текущей используемой памяти, целое число
         """
         return self.memory_manager.memory_ptr.physical_memory_size - self.calculate_memory_usage()
 
     def calculate_available_memory(self) -> int:
         """
-        Вычисление текущей свободной памяти (общая память минус используемая)
+        Вычисление текущей свободной памяти
         :return: размер текущей свободной памяти, целое число
         """
         return self.memory_manager.available_memory
@@ -173,7 +176,7 @@ class OSModel:
                                                         self.config.process_generation.total_commands_max)
             commands_config.io_command_ratio = \
                 RandomFactory.generate_random_float_value(self.config.process_generation.io_percentage_min,
-                                                          self.config.process_generation.io_percentage_max)
+                                                          self.config.process_generation.io_percentage_max, 1)
             commands_config.min_operand = self.config.command_generation.operand_min
             commands_config.max_operand = self.config.command_generation.operand_max
 
@@ -186,16 +189,20 @@ class OSModel:
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
-            new_process.block_start_address = block_start
-            new_process.command_result_address = block_start + 2
+            new_process.process_commands_config.block_start_address = block_start
+
+            new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
+            new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
             self.load_new_task(new_process)
         return
 
     def perform_tick(self) -> None:
         """
         Выполняет один такт моделирования. В его ходе:
-        - планировщик распределяет задачи между ЦП (если есть освободившиеся)
+        - планировщик распределяет задачи между ЦП (если есть необходимость)
         - каждый ЦП выполняет один такт назначенного ему процесса
+        - планировщик распределяет задачи между контроллерами ввода-вывода (если есть необходимость)
+        - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
         :return:
         """
         for io in self.io_controllers:

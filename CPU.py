@@ -43,13 +43,13 @@ class CPU:
                 op_1 = self.read_operand(addr1)
                 op_2 = self.read_operand(addr2)
                 result = ALU.execute_operation(operation_type=opType, operand_1=op_1, operand_2=op_2)
-                self.write_result(result, self.current_process.command_result_address)
-                self.current_process.commands_counter += 1
+                self.write_result(result, self.current_process.process_memory_config.result_block_address)
+                self.current_process.process_statistics.total_commands_counter += 1
             case ExitCommand():
                 self.current_process.current_state = ProcessState.TERMINATED
             case IOCommand():
                 self.current_process.current_state = ProcessState.IO_INIT
-                self.current_process.commands_counter += 1
+                self.current_process.process_statistics.total_commands_counter += 1
 
         self.total_commands_executed += 1
         self.ticks_executed += 1
