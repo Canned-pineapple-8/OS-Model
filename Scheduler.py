@@ -208,6 +208,7 @@ class Scheduler:
                 process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.proc_table_ptr[process_pid].current_state = ProcessState.IO_BLOCKED
                 self.io_process_manager.add_process_to_queue(process_pid)
+                self.cpu_process_manager.load_task_from_queue(cpu)
         elif cpu.current_state is CPUState.IDLE:
             self.cpu_process_manager.load_task_from_queue(cpu)
 

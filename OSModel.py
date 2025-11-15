@@ -204,12 +204,12 @@ class OSModel:
         - каждый ЦП выполняет один такт назначенного ему процесса
         - планировщик распределяет задачи между контроллерами ввода-вывода (если есть необходимость)
         - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
-        :return:
         """
-        for io in self.io_controllers:
-            io.execute_tick()
-            self.scheduler.dispatch_io(io)
         for cpu in self.cpus:
             self.scheduler.dispatch_cpu(cpu)
             cpu.execute_tick()
+
+        for io in self.io_controllers:
+            self.scheduler.dispatch_io(io)
+            io.execute_tick()
         return

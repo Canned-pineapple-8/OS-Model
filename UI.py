@@ -74,7 +74,7 @@ class OSUI:
 
         # Запуск автообновления
         self.running = True
-        self.start_auto_update(interval=1000)  # обновление каждые 1000 мс
+        self.start_auto_update(interval=100)  # обновление каждые 1000 мс
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
 
