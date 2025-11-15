@@ -3,6 +3,7 @@ from Process import Process, ProcessState
 from CPU import CPU, CPUState
 from IOController import IOController, IOControllerState
 from typing import *
+from MemoryManager import MemoryManager
 
 
 class IOProcessManager:
@@ -159,7 +160,7 @@ class CPUProcessManager:
 
 
 class Scheduler:
-    def __init__(self, proc_table: dict, quantum_size:int) -> None:
+    def __init__(self, proc_table: dict, quantum_size:int, memory_manager: MemoryManager) -> None:
         """
         Инициализация планировщика
         """
@@ -168,6 +169,8 @@ class Scheduler:
 
         self.cpu_process_manager: CPUProcessManager = CPUProcessManager(self.proc_table_ptr)  # регулировщик ЦПр
         self.io_process_manager: IOProcessManager = IOProcessManager(self.proc_table_ptr)  # регулировщик контроллеров IO
+
+        self.memory_manager: MemoryManager = memory_manager
         return
 
     def dispatch_io(self, io_controller:IOController) -> None:
@@ -198,6 +201,7 @@ class Scheduler:
                 self.cpu_process_manager.load_task_from_queue(cpu)
             elif cpu.is_process_finished():
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
+                self.memory_manager.free_memory_from_process(unloaded_process_pid)
                 self.proc_table_ptr.pop(unloaded_process_pid, None)
                 self.cpu_process_manager.load_task_from_queue(cpu)
             elif cpu.current_process.current_state == ProcessState.IO_INIT:

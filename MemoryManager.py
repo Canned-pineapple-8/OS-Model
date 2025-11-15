@@ -1,14 +1,16 @@
 from typing import *
 from Memory import Memory
+from Process import Process
 
 
 class MemoryManager:
-    def __init__(self, memory_ptr: Memory):
+    def __init__(self, memory_ptr: Memory, proc_table_ptr: Dict[int, Process]):
         """
         Инициализация менеджера памяти
         :param memory_ptr: указатель на структуру физической памяти
         """
         self.memory_ptr = memory_ptr
+        self.proc_table_ptr = proc_table_ptr
         self.available_memory = self.memory_ptr.physical_memory_size
         # таблица сегментов - структура типа Dict[адрес_начала_блока, Tuple[Optional[PID_процесса], размер_блока]
         self.memory_map: Dict[int, Tuple[Optional[int], int]] = dict([(0, (None,self.available_memory))])
@@ -54,9 +56,13 @@ class MemoryManager:
         Освобождает память от процесса и обновляет свободную память
         :param process_pid: PID процесса, который нужно удалить из памяти
         """
-        if process_pid not in self.memory_map:
+        if process_pid not in self.proc_table_ptr:
             raise RuntimeError(f"Процесса {process_pid} не существует")
-        process_address, process_size = self.memory_map.pop(process_pid)
+        process_block_start = self.proc_table_ptr[process_pid].process_memory_config.block_start
+
+        if process_block_start not in self.memory_map or self.memory_map[process_block_start][0] is None:
+            raise RuntimeError(f"Процесса {process_pid} не существует")
+        process_address, process_size = process_block_start, self.memory_map[process_block_start][1]
 
         start_address = process_address
         new_size = process_size
@@ -66,8 +72,8 @@ class MemoryManager:
         while left >= 0 and left not in self.memory_map:
             left -= 1
         if left >= 0 and self.memory_map[left][0] is None:
-            left_address, left_size = self.memory_map.pop(left)
-            start_address = left_address
+            _, left_size = self.memory_map.pop(left)
+            start_address = left
             new_size += left_size
 
         # проверяем правый соседний блок

@@ -22,8 +22,8 @@
 
   "process_generation": {
     "min_memory": 10,
-    "total_commands_min": 1,
-    "total_commands_max": 5,
+    "total_commands_min": 5,
+    "total_commands_max": 10,
     "io_percentage_min": 0,
     "io_percentage_max": 0.5
   },

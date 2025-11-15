@@ -51,9 +51,9 @@ class ProcessCommandsConfig:
 class Process:
     free_pid = 0
 
-    def __init__(self, ph_memory_ptr: Memory, process_memory_info: ProcessMemoryConfig = ProcessMemoryConfig(),
-                 process_statistics: ProcessStatistics = ProcessStatistics(),
-                 process_commands_config: ProcessCommandsConfig = ProcessCommandsConfig()
+    def __init__(self, ph_memory_ptr: Memory, process_memory_info: ProcessMemoryConfig = None,
+                 process_statistics: ProcessStatistics = None,
+                 process_commands_config: ProcessCommandsConfig = None
                  ) -> None:
         """
         Инициализация процесса
@@ -67,9 +67,20 @@ class Process:
         Process.free_pid += 1
         self.current_state = ProcessState.NEW # изначальное состояние процесса
 
-        self.process_memory_config = process_memory_info
-        self.process_statistics = process_statistics
-        self.process_commands_config = process_commands_config
+        if process_memory_info is None:
+            self.process_memory_config = ProcessMemoryConfig()
+        else:
+            self.process_memory_config = process_memory_info
+
+        if process_statistics is None:
+            self.process_statistics = ProcessStatistics()
+        else:
+            self.process_statistics = process_statistics
+
+        if process_commands_config is None:
+            self.process_commands_config = ProcessCommandsConfig()
+        else:
+            self.process_commands_config = process_commands_config
 
         self.current_command = None  # текущая команда процесса
         return

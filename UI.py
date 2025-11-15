@@ -96,9 +96,9 @@ class OSUI:
                 else:
                     process_info = {
                         "PID": process.pid,
-                        "Память": process.memory,
-                        "Всего команд": process.commands_size,
-                        "Счетчик команд": process.commands_counter,
+                        "Память": process.process_memory_config.block_size,
+                        "Всего команд": process.process_commands_config.total_commands_cnt,
+                        "Счетчик команд": process.process_statistics.total_commands_counter,
                         "Состояние": process.current_state
                     }
             except Exception as e:

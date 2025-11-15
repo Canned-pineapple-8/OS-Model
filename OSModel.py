@@ -24,15 +24,15 @@ class OSModel:
         self.config = self.load_config("config.json")
 
         self.physical_memory = Memory(self.config.memory.total_memory)
-        self.memory_manager = MemoryManager(self.physical_memory)
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
+        self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)
 
         self.cpus = [CPU(self.physical_memory) for _ in range(self.config.cpu.cpus_num)]
         self.io_controllers = [IOController() for _ in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size)  # инициализация планировщика и его структур
+        self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size, self.memory_manager)  # инициализация планировщика и его структур
 
         self.running = True
         return
@@ -84,7 +84,7 @@ class OSModel:
         Вычисление текущей используемой памяти (выполняется через MemoryManager)
         :return: размер текущей используемой памяти, целое число
         """
-        return self.memory_manager.memory_ptr.physical_memory_size - self.calculate_memory_usage()
+        return self.memory_manager.memory_ptr.physical_memory_size - self.memory_manager.available_memory
 
     def calculate_available_memory(self) -> int:
         """
@@ -169,7 +169,7 @@ class OSModel:
         Заполняет память новыми процессами до достижения лимита.
         """
         new_process_memory = self.config.process_generation.min_memory
-        while self.calculate_available_memory() > new_process_memory and len(self.proc_table) < self.proc_table_size:
+        while self.calculate_available_memory() >= new_process_memory and len(self.proc_table) < self.proc_table_size:
             commands_config = ProcessCommandsConfig()
             commands_config.total_commands_cnt = \
                 RandomFactory.generate_random_int_value(self.config.process_generation.total_commands_min,
@@ -186,14 +186,15 @@ class OSModel:
                                   process_commands_config=commands_config,
                                   process_memory_info=memory_config)
 
+            self.load_new_task(new_process)
+
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
-            new_process.process_commands_config.block_start_address = block_start
+            new_process.process_memory_config.block_start = block_start
 
             new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
             new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
-            self.load_new_task(new_process)
         return
 
     def perform_tick(self) -> None:
