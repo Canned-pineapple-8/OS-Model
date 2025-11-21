@@ -16,6 +16,7 @@ class IOColumn(QWidget):
     def __init__(self, io_name, accent_color="#FF6F61", parent=None):
         super().__init__(parent)
         self.setMinimumWidth(280)
+        self.setMinimumHeight(280)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(14, 14, 14, 14)
@@ -76,6 +77,7 @@ class CPUColumn(QWidget):
     def __init__(self, cpu_name, accent_color="#FF6F61", parent=None):
         super().__init__(parent)
         self.setMinimumWidth(280)
+        self.setMinimumHeight(280)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(14, 14, 14, 14)
@@ -270,18 +272,13 @@ class OSUI(QMainWindow):
 
         top_panel.addStretch()
 
-        self.btn_processes = QPushButton("Процессы")
-        self.btn_processes.setFont(QFont(MONO_FONT, 12))
-        self.btn_processes.clicked.connect(self.open_process_list)
-        top_panel.addWidget(self.btn_processes)
-
         main_layout.addLayout(top_panel)
 
         # ------ Log View -------
         self.text_area = QTextEdit()
         self.text_area.setReadOnly(True)
         self.text_area.setFont(QFont(MONO_FONT, 11))
-        self.text_area.setMinimumHeight(220)
+        self.text_area.setMinimumHeight(150)
         main_layout.addWidget(self.text_area)
 
         # ---- Command Input ----
@@ -368,7 +365,7 @@ class OSUI(QMainWindow):
                         "PID": process.pid,
                         "Память": process.process_memory_config.block_size,
                         "Длительность IO команды": process.current_command.duration,
-                        "Счетчик IO команд": process.process_statistics.io_commands_counter,
+                        "Счетчик IO команд": io.current_ticks_executed,
                         "Состояние": state
                     }
 
@@ -380,15 +377,6 @@ class OSUI(QMainWindow):
 
         # Process window update
         self.processes.update_list()
-
-    def open_process_list(self):
-        if not self.process_window:
-            self.process_window = ProcessListDialog(self.os_model, self)
-
-        self.process_window.update_list()
-        self.process_window.show()
-        self.process_window.raise_()
-        self.process_window.activateWindow()
 
     # -------- Command Handling ----------
     def process_command(self):

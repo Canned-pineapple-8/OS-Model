@@ -43,6 +43,9 @@ class ProcessGenerationConfig:
     total_commands_max: int = 10
     io_percentage_min: float = 0.0
     io_percentage_max: float = 0.5
+    io_command_duration_min: int = 1
+    io_command_duration_max: int = 5
+
 
 
 # ---------------- COMMAND GENERATION ----------------

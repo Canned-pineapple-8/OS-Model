@@ -179,6 +179,8 @@ class OSModel:
                                                           self.config.process_generation.io_percentage_max, 1)
             commands_config.min_operand = self.config.command_generation.operand_min
             commands_config.max_operand = self.config.command_generation.operand_max
+            commands_config.io_command_duration_min = self.config.process_generation.io_command_duration_min
+            commands_config.io_command_duration_max = self.config.process_generation.io_command_duration_max
 
             memory_config = ProcessMemoryConfig(block_size=new_process_memory)
 

@@ -44,6 +44,8 @@ class ProcessCommandsConfig:
     """
     total_commands_cnt: int = 10  # общее количество команд процесса (обычные + IO)
     io_command_ratio: float = 0.5  # вероятность встретить IO-команду
+    io_command_duration_min: int = 1  # минимальная длительность IO-команды
+    io_command_duration_max: int = 5  # максимальная длительность IO-команды
     min_operand: int = 1  # минимальное значение операнда для команд ALU
     max_operand: int = 10  # максимальное количество операнда для команд ALU
 
@@ -105,7 +107,8 @@ class Process:
         # с заданной вероятностью генерируем IO-команду, иначе - арифметическую
         percent = RandomFactory.generate_random_float_value(0.0, 1.0)
         if percent < io_commands_percentage:
-            io_command_length = RandomFactory.generate_random_int_value(1, 2)
+            io_command_length = RandomFactory.generate_random_int_value(self.process_commands_config.io_command_duration_min,
+                                                                        self.process_commands_config.io_command_duration_max)
             self.current_command = IOCommand(io_command_length)
         else:
             min_operand, max_operand = self.process_commands_config.min_operand, self.process_commands_config.max_operand
