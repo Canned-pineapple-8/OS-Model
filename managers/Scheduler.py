@@ -164,7 +164,7 @@ class Scheduler:
         self.cpu_process_manager: CPUProcessManager = CPUProcessManager(self.proc_table_ptr)  # регулировщик ЦПр
         self.io_process_manager: IOProcessManager = IOProcessManager(self.proc_table_ptr)  # регулировщик контроллеров IO
 
-        self.memory_manager: MemoryManager = memory_manager
+        self.memory_manager: MemoryManager = memory_manager  # менеджер памяти
         return
 
     def dispatch_io(self, io_controller: IOController) -> None:
@@ -173,12 +173,14 @@ class Scheduler:
         :param io_controller: IO контроллер
         """
         if io_controller.current_state == IOControllerState.RUNNING:
+            # если команда ввода-вывода завершена - возвращаем процесс в очередь ЦПр
             if io_controller.current_process.current_state == ProcessState.IO_END:
                 io_controller.current_ticks_executed = 0
                 io_controller.current_state = IOControllerState.IDLE
                 unloaded_process_pid = self.io_process_manager.unload_task(io_controller)
                 self.cpu_process_manager.add_process_to_queue(unloaded_process_pid)
         elif io_controller.current_state == IOControllerState.IDLE:
+            # если контроллер простаивает - назначаем ему задачу
             self.io_process_manager.load_task_from_queue(io_controller)
 
     def dispatch_cpu(self, cpu: CPU) -> None:
@@ -187,6 +189,7 @@ class Scheduler:
         :param cpu: ЦПр для проверки
         """
         if cpu.current_state is CPUState.RUNNING:
+            # если квант времени истек - выгружаем процесс, загружаем новый
             if cpu.ticks_executed >= self.quantum_size:
                 cpu.current_process.current_state = ProcessState.READY
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
@@ -195,17 +198,19 @@ class Scheduler:
                 self.cpu_process_manager.load_task_from_queue(cpu)
 
             elif cpu.is_process_finished():
+                # если процесс завершен - выгружаем процесс, освобождаем память, загружаем новый процесс
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.memory_manager.free_memory_from_process(unloaded_process_pid)
-                # удалить запись из таблицы
                 self.proc_table_ptr.pop(unloaded_process_pid, None)
                 self.cpu_process_manager.load_task_from_queue(cpu)
 
             elif cpu.current_process.current_state == ProcessState.IO_INIT:
+                # если необходимо выполнить команду ввода-вывода - выгружаем из ЦПр и передаем в очередь контроллеров IO
                 process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.proc_table_ptr[process_pid].current_state = ProcessState.IO_BLOCKED
                 self.io_process_manager.add_process_to_queue(process_pid)
                 self.cpu_process_manager.load_task_from_queue(cpu)
 
         elif cpu.current_state is CPUState.IDLE:
+            # если ЦП простаивает - загружаем процесс
             self.cpu_process_manager.load_task_from_queue(cpu)

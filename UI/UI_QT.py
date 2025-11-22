@@ -272,5 +272,5 @@ class OSUI(QMainWindow):
 def run_ui(os_model, interval_ms=100):
     app = QApplication(sys.argv)
     ui = OSUI(os_model, interval_ms)
-    ui.show()
+    ui.showMaximized()
     sys.exit(app.exec())

@@ -170,6 +170,7 @@ class OSModel:
         """
         new_process_memory = self.config.process_generation.min_memory
         while self.calculate_available_memory() >= new_process_memory and len(self.proc_table) < self.proc_table_size:
+            # генерация параметров
             commands_config = ProcessCommandsConfig()
             commands_config.total_commands_cnt = \
                 RandomFactory.generate_random_int_value(self.config.process_generation.total_commands_min,
@@ -190,6 +191,7 @@ class OSModel:
 
             self.load_new_task(new_process)
 
+            # выделение памяти под процесс
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
