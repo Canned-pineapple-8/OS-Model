@@ -8,19 +8,30 @@ from devices.ALU import ALU
 class CPUState(Enum):
     IDLE = 0  # простаивает
     RUNNING = 1  # работает
-    WAITING = 2  # ожидает (на будущее, возможно, ожидание команд ввода-вывода)
 
 
 class CPU:
     def __init__(self, memory_ptr: Memory) -> None:
         self.current_state = CPUState.IDLE
-        self.current_process: Optional[Process] = None
+        self._current_process: Optional[Process] = None
 
         self.ticks_executed = 0
         self.total_commands_executed = 0
 
         self.memory_ptr = memory_ptr
         return
+
+    @property
+    def current_process(self) -> Optional[Process]:
+        return self._current_process
+
+    @current_process.setter
+    def current_process(self, proc: Optional[Process]) -> None:
+        self._current_process = proc
+        if proc is None:
+            self.current_state = CPUState.IDLE
+        else:
+            self.current_state = CPUState.RUNNING
 
     def read_operand(self, addr: int) -> int:
         return self.memory_ptr.read(addr)

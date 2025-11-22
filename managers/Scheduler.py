@@ -52,7 +52,7 @@ class BaseProcessManager:
         """
         next_pid = self.get_process_from_queue()
         if next_pid is None:
-            self._set_controller_idle(controller)  # устанавливаем в IDLE, если очередь пуста
+            controller.current_process = None  # устанавливаем в IDLE, если очередь пуста
             return
         self.load_task(controller, next_pid)  # вызываем переопределённый метод наследника
 
@@ -67,17 +67,6 @@ class BaseProcessManager:
         абстрактный метод
         """
         raise NotImplementedError
-
-    def _set_controller_idle(self, controller) -> None:
-        """
-        Выставляем контроллер в IDLE
-        :param controller: CPU/IOController
-        """
-        try:
-            controller.current_state = controller.current_state.__class__.IDLE  # best-effort
-        except Exception:
-            pass
-
 
 class CPUProcessManager(BaseProcessManager):
     # Менеджер процессов для CPU.
@@ -100,7 +89,6 @@ class CPUProcessManager(BaseProcessManager):
         process = self.restore_process_state_word(process_pid)
         cpu.current_process = process
         process.current_state = ProcessState.RUNNING
-        cpu.current_state = CPUState.RUNNING
 
     def unload_task(self, cpu: CPU) -> int:
         """
@@ -111,14 +99,7 @@ class CPUProcessManager(BaseProcessManager):
         process = cpu.current_process
         self.save_process_state_word(process)
         cpu.current_process = None
-        cpu.current_state = CPUState.IDLE
         return process.pid
-
-    def _set_controller_idle(self, controller) -> None:
-        try:
-            controller.current_state = CPUState.IDLE
-        except Exception:
-            super()._set_controller_idle(controller)
 
 
 class IOProcessManager(BaseProcessManager):
@@ -132,7 +113,6 @@ class IOProcessManager(BaseProcessManager):
         """
         process = self.restore_process_state_word(process_pid)
         controller.current_process = process
-        controller.current_state = IOControllerState.RUNNING
 
     def unload_task(self, controller: IOController) -> int:
         """
@@ -143,14 +123,7 @@ class IOProcessManager(BaseProcessManager):
         process = controller.current_process
         self.save_process_state_word(process)
         controller.current_process = None
-        controller.current_state = IOControllerState.IDLE
         return process.pid
-
-    def _set_controller_idle(self, controller) -> None:
-        try:
-            controller.current_state = IOControllerState.IDLE
-        except Exception:
-            super()._set_controller_idle(controller)
 
 
 class Scheduler:

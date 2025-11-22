@@ -131,7 +131,7 @@ class OSModel:
 
         # очистка планировщика
         self.scheduler.io_process_manager.processes.clear()
-        self.scheduler.cpu_process_manager.process_queue.clear()
+        self.scheduler.cpu_process_manager.processes.clear()
 
         # очистка CPU
         for cpu in self.cpus:
