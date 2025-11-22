@@ -21,7 +21,7 @@ class OSModel:
         """
         self.running = False
 
-        self.config = self.load_config("model/config.json")
+        self.config = self.load_config(config_path)
 
         self.physical_memory = Memory(self.config.memory.total_memory)
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)

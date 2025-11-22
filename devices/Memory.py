@@ -29,7 +29,7 @@ class Memory:
         :param address: адрес
         """
         if address < 0 or address >= self.physical_memory_size:
-            raise RuntimeError("Попытка записи памяти за допустимыми пределами.")
+            raise RuntimeError("Попытка записи в память за допустимыми пределами.")
         self.physical_memory[address] = value
 
 

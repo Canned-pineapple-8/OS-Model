@@ -69,20 +69,15 @@ class Process:
         Process.free_pid += 1
         self.current_state = ProcessState.NEW # изначальное состояние процесса
 
-        if process_memory_info is None:
-            self.process_memory_config = ProcessMemoryConfig()
-        else:
-            self.process_memory_config = process_memory_info
-
-        if process_statistics is None:
-            self.process_statistics = ProcessStatistics()
-        else:
-            self.process_statistics = process_statistics
-
-        if process_commands_config is None:
-            self.process_commands_config = ProcessCommandsConfig()
-        else:
-            self.process_commands_config = process_commands_config
+        self.process_memory_config = (
+            process_memory_info if process_memory_info is not None else ProcessMemoryConfig()
+        )
+        self.process_statistics = (
+            process_statistics if process_statistics is not None else ProcessStatistics()
+        )
+        self.process_commands_config = (
+            process_commands_config if process_commands_config is not None else ProcessCommandsConfig()
+        )
 
         self.current_command = None  # текущая команда процесса
         return

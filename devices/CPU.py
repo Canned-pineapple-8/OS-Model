@@ -47,8 +47,8 @@ class CPU:
                 self.current_process.current_state = ProcessState.TERMINATED
             case IOCommand():
                 self.current_process.current_state = ProcessState.IO_INIT
-                self.current_process.process_statistics.total_commands_counter += 1
-
+            case _:
+                raise RuntimeError("Неизвестный тип команды")
         self.total_commands_executed += 1
         self.ticks_executed += 1
 
