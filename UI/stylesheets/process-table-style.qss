@@ -1,0 +1,68 @@
+QDialog { background-color: #121217; }
+
+QTableCornerButton::section {
+    background-color: #262630;   /* или любой другой */
+    border: none;
+}
+
+QScrollBar:vertical {
+    background: #1c1c22;
+    width: 10px;
+    margin: 0px;
+    border-radius: 5px;
+}
+
+/* Ползунок */
+QScrollBar::handle:vertical {
+    background: #3a3a44;
+    min-height: 24px;
+    border-radius: 5px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #50505c;
+}
+
+/* Отключаем кнопки вверх/вниз */
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* Трек над/под ползунком */
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QTableWidget {
+    background-color: #1c1c22;
+    color: #f0f0f0;
+    gridline-color: #303038;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+QHeaderView::section {
+    background-color: #262630;
+    color: #f0f0f0;
+    border: none;
+    padding: 6px;
+}
+
+QPushButton {
+    background-color: #ff6f61;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #ff8a75;
+}
+
+QTableWidget QHeaderView::section {
+    background-color: #262630;
+}
+
+

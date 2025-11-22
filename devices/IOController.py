@@ -1,0 +1,35 @@
+from typing import *
+from abstractions.Process import *
+
+
+# класс-перечисление состояний процессора
+class IOControllerState(Enum):
+    IDLE = 0  # простаивает
+    RUNNING = 1  # работает
+
+
+class IOController:
+    def __init__(self):
+        """
+        Инициализация IO контроллера
+        """
+        self.current_state = IOControllerState.IDLE  # состояние контроллера
+        self.current_process:Optional[Process] = None  # текущий исполняемый процесс
+        self.current_ticks_executed: int = 0  # количество тактов команды ввода-вывода, которое уже выполнено
+        self.total_ticks_executed = 0  # общее количество выполенных тактов контроллером (для статистики)
+
+    def execute_tick(self) -> None:
+        """
+        Выполнение одного такта IO процесса
+        """
+        if self.current_process is None:
+            return
+        assert isinstance(self.current_process.current_command, IOCommand)  # для контроля,
+        # что работаем над командой ввода-вывода
+        self.current_ticks_executed += 1
+        self.total_ticks_executed += 1
+        if self.current_process.current_command.duration == self.current_ticks_executed:
+            self.current_process.process_statistics.total_commands_counter += 1  # помечаем команду как выполненную
+            # в статистике процесса
+            self.current_process.process_statistics.io_commands_counter += 1
+            self.current_process.current_state = ProcessState.IO_END  # сигнал для планировщика
