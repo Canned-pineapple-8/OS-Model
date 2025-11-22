@@ -1,37 +1,34 @@
+# scheduler_module.py
 from collections import deque
+from typing import Dict, Optional, Deque
 from abstractions.Process import Process, ProcessState
 from devices.CPU import CPU, CPUState
 from devices.IOController import IOController, IOControllerState
-from typing import *
 from managers.MemoryManager import MemoryManager
 
 
-class IOProcessManager:
+class BaseProcessManager:
     """
-    Класс-регулировщик для процессоров ввода-вывода
+    Базовый менеджер очереди процессов (общая функциональность для CPU и IO).
     """
-    def __init__(self, proc_table_ptr: Dict[int, Process]):
-        self.processes = deque()  # очередь на исполнение процессов: deque [Process]
-        self.proc_table_ptr = proc_table_ptr  # ссылка на таблицу процессов
+    def __init__(self, proc_table_ptr: Dict[int, Process]) -> None:
+        self.processes: Deque[int] = deque()  # очередь PID процессов
+        self.proc_table_ptr = proc_table_ptr  # указатель на таблицу процессов
 
     def add_process_to_queue(self, process_pid: int) -> None:
         """
-        Добавляет новый процесс в очередь. Проверки на допустимое количество процессов нет, т.к. это возлагается
-        на вызывающий метод
-        :param process_pid: PID процесса, который требуется добавить в очередь
+        Добавляет процесс в конец очереди.
         """
         self.processes.append(process_pid)
-        return
 
     def get_process_from_queue(self) -> Optional[int]:
         """
-        Извлекает следующий на исполнение процесс из головы очереди
-        :return: PID процесса из головы очереди
+        Извлекает процесс из головы очереди и возвращает PID или возвращает None, если пуста
+        :return: int
         """
         if not self.processes:
             return None
-        process_pid = self.processes.popleft()
-        return process_pid
+        return self.processes.popleft()
 
     def save_process_state_word(self, process_state_word: Process) -> None:
         """
@@ -39,9 +36,8 @@ class IOProcessManager:
         :param process_state_word: слово состояния процесса
         """
         self.proc_table_ptr[process_state_word.pid] = process_state_word
-        return
 
-    def restore_process_state_word(self, process_pid:int) -> Process:
+    def restore_process_state_word(self, process_pid: int) -> Process:
         """
         Восстанавливает слово состояния процесса
         :param process_pid: PID процесса
@@ -49,44 +45,42 @@ class IOProcessManager:
         """
         return self.proc_table_ptr[process_pid]
 
-    def load_task_from_queue(self, controller:IOController) -> None:
+    def load_task_from_queue(self, controller) -> None:
         """
         Извлекает процесс из головы очереди
-        :param controller: контроллер ввода-вывода, которому требуется загрузить процесс
+        :param controller: устройство, которому необходимо загрузить процесс на исполнение
         """
-        if len(self.processes) > 0:
-            next_process = self.get_process_from_queue()
-            self.load_task(controller, next_process)
-        else:
-            controller.current_state = IOControllerState.IDLE
+        next_pid = self.get_process_from_queue()
+        if next_pid is None:
+            self._set_controller_idle(controller)  # устанавливаем в IDLE, если очередь пуста
+            return
+        self.load_task(controller, next_pid)  # вызываем переопределённый метод наследника
 
-    def load_task(self, controller:IOController, process_pid:int) -> None:
+    def load_task(self, controller, process_pid: int) -> None:
         """
-        Загружает процесс на исполнение переданному контроллеру IO, выставляет необходимые состояния контроллера IO и процесса
-        :param controller: контроллер ввода-вывода, которому необходимо загрузить процесс
-        :param process_pid: PID процесса для загрузки
+        абстрактный метод
         """
-        process = self.restore_process_state_word(process_pid)
-        controller.current_process = process
-        controller.current_state = IOControllerState.RUNNING
+        raise NotImplementedError
 
-    def unload_task(self, controller:IOController) -> int:
+    def unload_task(self, controller) -> int:
         """
-        Освобождает переданный контроллер IO от текущего процесса
-        :param controller: контроллер IO, который необходимо освободить от процесса
-        :return: старый выгруженный процесс
+        абстрактный метод
         """
-        process = controller.current_process
-        self.save_process_state_word(process)
-        controller.current_process = None
-        controller.current_state = IOControllerState.IDLE
-        return process.pid
+        raise NotImplementedError
+
+    def _set_controller_idle(self, controller) -> None:
+        """
+        Выставляем контроллер в IDLE
+        :param controller: CPU/IOController
+        """
+        try:
+            controller.current_state = controller.current_state.__class__.IDLE  # best-effort
+        except Exception:
+            pass
 
 
-class CPUProcessManager:
-    def __init__(self, proc_table_ptr: Dict[int, Process]):
-        self.process_queue = deque()  # очередь на исполнение процессов: deque [Process]
-        self.proc_table_ptr = proc_table_ptr  # ссылка на таблицу процессов
+class CPUProcessManager(BaseProcessManager):
+    # Менеджер процессов для CPU.
 
     def add_process_to_queue(self, process_pid: int) -> None:
         """
@@ -95,47 +89,9 @@ class CPUProcessManager:
         :param process_pid: PID процесса, который требуется добавить в очередь
         """
         self.proc_table_ptr[process_pid].current_state = ProcessState.READY
-        self.process_queue.append(process_pid)
-        return
+        super().add_process_to_queue(process_pid)
 
-    def get_process_from_queue(self) -> Optional[int]:
-        """
-        Извлекает следующий на исполнение процесс из головы очереди
-        :return: PID процесса из головы очереди
-        """
-        if not self.process_queue:
-            return None
-        process_pid = self.process_queue.popleft()
-        return process_pid
-
-    def save_process_state_word(self, process_state_word: Process) -> None:
-        """
-        Сохраняет слово состояния процесса
-        :param process_state_word: слово состояния процесса
-        """
-        self.proc_table_ptr[process_state_word.pid] = process_state_word
-        return
-
-    def restore_process_state_word(self, process_pid:int) -> Process:
-        """
-        Восстанавливает слово состояния процесса
-        :param process_pid: PID процесса
-        :return: слово состояния процесса
-        """
-        return self.proc_table_ptr[process_pid]
-
-    def load_task_from_queue(self, cpu:CPU) -> None:
-        """
-        Извлекает процесс из головы очереди
-        :param cpu: ЦП, которому необходимо загрузить процесс на исполнение
-        """
-        if len(self.process_queue) > 0:
-            next_process = self.get_process_from_queue()
-            self.load_task(cpu, next_process)
-        else:
-            cpu.current_state = CPUState.IDLE
-
-    def load_task(self, cpu:CPU, process_pid:int) -> None:
+    def load_task(self, cpu: CPU, process_pid: int) -> None:
         """
         Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
         :param process_pid: PID процесса для загрузки
@@ -146,7 +102,7 @@ class CPUProcessManager:
         process.current_state = ProcessState.RUNNING
         cpu.current_state = CPUState.RUNNING
 
-    def unload_task(self, cpu:CPU) -> int:
+    def unload_task(self, cpu: CPU) -> int:
         """
         Освобождает переданный ЦП от текущего процесса
         :param cpu: процессор для освобождения
@@ -158,9 +114,47 @@ class CPUProcessManager:
         cpu.current_state = CPUState.IDLE
         return process.pid
 
+    def _set_controller_idle(self, controller) -> None:
+        try:
+            controller.current_state = CPUState.IDLE
+        except Exception:
+            super()._set_controller_idle(controller)
+
+
+class IOProcessManager(BaseProcessManager):
+    # Менеджер очереди для IO контроллеров.
+
+    def load_task(self, controller: IOController, process_pid: int) -> None:
+        """
+        Загружает процесс на исполнение переданному контроллеру IO, выставляет необходимые состояния контроллера IO и процесса
+        :param controller: контроллер ввода-вывода, которому необходимо загрузить процесс
+        :param process_pid: PID процесса для загрузки
+        """
+        process = self.restore_process_state_word(process_pid)
+        controller.current_process = process
+        controller.current_state = IOControllerState.RUNNING
+
+    def unload_task(self, controller: IOController) -> int:
+        """
+        Освобождает переданный контроллер IO от текущего процесса
+        :param controller: контроллер IO, который необходимо освободить от процесса
+        :return: старый выгруженный процесс
+        """
+        process = controller.current_process
+        self.save_process_state_word(process)
+        controller.current_process = None
+        controller.current_state = IOControllerState.IDLE
+        return process.pid
+
+    def _set_controller_idle(self, controller) -> None:
+        try:
+            controller.current_state = IOControllerState.IDLE
+        except Exception:
+            super()._set_controller_idle(controller)
+
 
 class Scheduler:
-    def __init__(self, proc_table: dict, quantum_size:int, memory_manager: MemoryManager) -> None:
+    def __init__(self, proc_table: Dict[int, Process], quantum_size: int, memory_manager: MemoryManager) -> None:
         """
         Инициализация планировщика
         """
@@ -173,7 +167,7 @@ class Scheduler:
         self.memory_manager: MemoryManager = memory_manager
         return
 
-    def dispatch_io(self, io_controller:IOController) -> None:
+    def dispatch_io(self, io_controller: IOController) -> None:
         """
         Проверить состояние контроллера IO, распределить процессы при необходимости
         :param io_controller: IO контроллер
@@ -187,7 +181,7 @@ class Scheduler:
         elif io_controller.current_state == IOControllerState.IDLE:
             self.io_process_manager.load_task_from_queue(io_controller)
 
-    def dispatch_cpu(self, cpu:CPU) -> None:
+    def dispatch_cpu(self, cpu: CPU) -> None:
         """
         Проверить состояние ЦПр, распределить процессы при необходимости
         :param cpu: ЦПр для проверки
@@ -199,18 +193,19 @@ class Scheduler:
                 self.cpu_process_manager.add_process_to_queue(unloaded_process_pid)
                 cpu.ticks_executed = 0
                 self.cpu_process_manager.load_task_from_queue(cpu)
+
             elif cpu.is_process_finished():
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.memory_manager.free_memory_from_process(unloaded_process_pid)
+                # удалить запись из таблицы
                 self.proc_table_ptr.pop(unloaded_process_pid, None)
                 self.cpu_process_manager.load_task_from_queue(cpu)
+
             elif cpu.current_process.current_state == ProcessState.IO_INIT:
                 process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.proc_table_ptr[process_pid].current_state = ProcessState.IO_BLOCKED
                 self.io_process_manager.add_process_to_queue(process_pid)
                 self.cpu_process_manager.load_task_from_queue(cpu)
+
         elif cpu.current_state is CPUState.IDLE:
             self.cpu_process_manager.load_task_from_queue(cpu)
-
-
-
