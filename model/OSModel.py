@@ -1,16 +1,16 @@
 import json
 import time
 
-from Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
+from model.Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
     ProcessGenerationConfig, CommandGenerationConfig
-from Speed import Speed
-from Scheduler import Scheduler
-from CPU import CPU, CPUState
-from IOController import IOController, IOControllerState
-from MemoryManager import MemoryManager
-from Process import Process, ProcessCommandsConfig, ProcessMemoryConfig, ProcessStatistics
-from RandomFactory import RandomFactory
-from Memory import Memory
+from abstractions.Speed import Speed
+from managers.Scheduler import Scheduler
+from devices.CPU import CPU, CPUState
+from devices.IOController import IOController, IOControllerState
+from managers.MemoryManager import MemoryManager
+from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
+from utils.RandomFactory import RandomFactory
+from devices.Memory import Memory
 
 
 class OSModel:
@@ -21,7 +21,7 @@ class OSModel:
         """
         self.running = False
 
-        self.config = self.load_config("config.json")
+        self.config = self.load_config("model/config.json")
 
         self.physical_memory = Memory(self.config.memory.total_memory)
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)

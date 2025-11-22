@@ -13,7 +13,7 @@ class MemoryConfig:
 
 @dataclass
 class CPUConfig:
-    cpus_num: int = 1
+    cpus_num: int = 3
     quantum_size: int = 5
 
 
@@ -21,7 +21,7 @@ class CPUConfig:
 
 @dataclass
 class IOConfig:
-    ios_num: int = 1
+    ios_num: int = 3
 
 
 # ---------------- SPEED ----------------

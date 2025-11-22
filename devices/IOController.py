@@ -1,5 +1,5 @@
 from typing import *
-from Process import *
+from abstractions.Process import *
 
 
 # класс-перечисление состояний процессора

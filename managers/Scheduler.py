@@ -1,9 +1,9 @@
 from collections import deque
-from Process import Process, ProcessState
-from CPU import CPU, CPUState
-from IOController import IOController, IOControllerState
+from abstractions.Process import Process, ProcessState
+from devices.CPU import CPU, CPUState
+from devices.IOController import IOController, IOControllerState
 from typing import *
-from MemoryManager import MemoryManager
+from managers.MemoryManager import MemoryManager
 
 
 class IOProcessManager:

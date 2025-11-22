@@ -1,9 +1,7 @@
-from enum import Enum, auto
-from Process import Process, ProcessState
-from Command import *
-from typing import Optional
-from Memory import *
-from ALU import ALU
+from abstractions.Process import Process, ProcessState
+from abstractions.Command import *
+from devices.Memory import *
+from devices.ALU import ALU
 
 
 # класс-перечисление состояний процессора

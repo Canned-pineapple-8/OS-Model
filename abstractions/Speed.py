@@ -1,5 +1,4 @@
-import json
-from Config import *
+from model.Config import *
 
 class Speed:
     def __init__(self, config: OSConfig) -> None:

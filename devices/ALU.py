@@ -1,4 +1,4 @@
-from Command import OpType
+from abstractions.Command import OpType
 
 
 class ALU:

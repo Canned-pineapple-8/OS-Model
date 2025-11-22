@@ -1,6 +1,6 @@
 from typing import *
-from Memory import Memory
-from Process import Process
+from devices.Memory import Memory
+from abstractions.Process import Process
 
 
 class MemoryManager:
