@@ -27,6 +27,8 @@ class IOController:
         self._current_process = proc
         if proc is None:
             self.current_state = IOControllerState.IDLE
+            self.current_ticks_executed = 0
+
         else:
             self.current_state = IOControllerState.RUNNING
 
@@ -38,10 +40,8 @@ class IOController:
             return
         assert isinstance(self.current_process.current_command, IOCommand)  # для контроля,
         # что работаем над командой ввода-вывода
-        self.current_ticks_executed += 1
-        self.total_ticks_executed += 1
         if self.current_process.current_command.duration == self.current_ticks_executed:
-            self.current_process.process_statistics.total_commands_counter += 1  # помечаем команду как выполненную
-            # в статистике процесса
-            self.current_process.process_statistics.io_commands_counter += 1
             self.current_process.current_state = ProcessState.IO_END  # сигнал для планировщика
+        else:
+            self.current_ticks_executed += 1
+            self.total_ticks_executed += 1

@@ -95,7 +95,7 @@ class Process:
 
         # если счетчик выполненных команд достиг количества команд процесса -
         # генерируем команду завершения
-        if commands_size - commands_counter <= 0:
+        if commands_size - commands_counter == 0:
             self.current_command = ExitCommand()
             return self.current_command
 

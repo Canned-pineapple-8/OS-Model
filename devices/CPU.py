@@ -30,6 +30,8 @@ class CPU:
         self._current_process = proc
         if proc is None:
             self.current_state = CPUState.IDLE
+            self.ticks_executed = 0
+
         else:
             self.current_state = CPUState.RUNNING
 
@@ -46,6 +48,8 @@ class CPU:
         """
         if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
             return
+        self.total_commands_executed += 1
+        self.ticks_executed += 1
         command = self.current_process.generate_command()
         match command:
             case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):
@@ -57,11 +61,12 @@ class CPU:
             case ExitCommand():
                 self.current_process.current_state = ProcessState.TERMINATED
             case IOCommand():
+                self.current_process.process_statistics.io_commands_counter += 1
+                self.current_process.process_statistics.total_commands_counter += 1
                 self.current_process.current_state = ProcessState.IO_INIT
             case _:
                 raise RuntimeError("Неизвестный тип команды")
-        self.total_commands_executed += 1
-        self.ticks_executed += 1
+
 
     def is_process_awaits_IO(self) -> bool:
         if self.current_process is None:

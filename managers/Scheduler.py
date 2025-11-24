@@ -1,4 +1,3 @@
-# scheduler_module.py
 from collections import deque
 from typing import Dict, Optional, Deque
 from abstractions.Process import Process, ProcessState
@@ -9,7 +8,7 @@ from managers.MemoryManager import MemoryManager
 
 class BaseProcessManager:
     """
-    Базовый менеджер очереди процессов (общая функциональность для CPU и IO).
+    Базовый менеджер очереди процессов (общая функциональность для CPU и IO)
     """
     def __init__(self, proc_table_ptr: Dict[int, Process]) -> None:
         self.processes: Deque[int] = deque()  # очередь PID процессов
@@ -67,6 +66,7 @@ class BaseProcessManager:
         абстрактный метод
         """
         raise NotImplementedError
+
 
 class CPUProcessManager(BaseProcessManager):
     # Менеджер процессов для CPU.
@@ -148,8 +148,6 @@ class Scheduler:
         if io_controller.current_state == IOControllerState.RUNNING:
             # если команда ввода-вывода завершена - возвращаем процесс в очередь ЦПр
             if io_controller.current_process.current_state == ProcessState.IO_END:
-                io_controller.current_ticks_executed = 0
-                io_controller.current_state = IOControllerState.IDLE
                 unloaded_process_pid = self.io_process_manager.unload_task(io_controller)
                 self.cpu_process_manager.add_process_to_queue(unloaded_process_pid)
         elif io_controller.current_state == IOControllerState.IDLE:
@@ -167,12 +165,12 @@ class Scheduler:
                 cpu.current_process.current_state = ProcessState.READY
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
                 self.cpu_process_manager.add_process_to_queue(unloaded_process_pid)
-                cpu.ticks_executed = 0
                 self.cpu_process_manager.load_task_from_queue(cpu)
 
             elif cpu.is_process_finished():
                 # если процесс завершен - выгружаем процесс, освобождаем память, загружаем новый процесс
                 unloaded_process_pid = self.cpu_process_manager.unload_task(cpu)
+                cpu.ticks_executed = 0
                 self.memory_manager.free_memory_from_process(unloaded_process_pid)
                 self.proc_table_ptr.pop(unloaded_process_pid, None)
                 self.cpu_process_manager.load_task_from_queue(cpu)
