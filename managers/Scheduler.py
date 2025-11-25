@@ -14,35 +14,7 @@ class BaseProcessManager:
         self.processes: Deque[int] = deque()  # очередь PID процессов
         self.proc_table_ptr = proc_table_ptr  # указатель на таблицу процессов
 
-    def add_process_to_queue(self, process_pid: int) -> None:
-        """
-        Добавляет процесс в конец очереди.
-        """
-        self.processes.append(process_pid)
 
-    def get_process_from_queue(self) -> Optional[int]:
-        """
-        Извлекает процесс из головы очереди и возвращает PID или возвращает None, если пуста
-        :return: int
-        """
-        if not self.processes:
-            return None
-        return self.processes.popleft()
-
-    def save_process_state_word(self, process_state_word: Process) -> None:
-        """
-        Сохраняет слово состояния процесса
-        :param process_state_word: слово состояния процесса
-        """
-        self.proc_table_ptr[process_state_word.pid] = process_state_word
-
-    def restore_process_state_word(self, process_pid: int) -> Process:
-        """
-        Восстанавливает слово состояния процесса
-        :param process_pid: PID процесса
-        :return: слово состояния процесса
-        """
-        return self.proc_table_ptr[process_pid]
 
     def load_task_from_queue(self, controller) -> None:
         """
@@ -80,26 +52,7 @@ class CPUProcessManager(BaseProcessManager):
         self.proc_table_ptr[process_pid].current_state = ProcessState.READY
         super().add_process_to_queue(process_pid)
 
-    def load_task(self, cpu: CPU, process_pid: int) -> None:
-        """
-        Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
-        :param process_pid: PID процесса для загрузки
-        :param cpu: процессор, в который будет загружена задача
-        """
-        process = self.restore_process_state_word(process_pid)
-        cpu.current_process = process
-        process.current_state = ProcessState.RUNNING
 
-    def unload_task(self, cpu: CPU) -> int:
-        """
-        Освобождает переданный ЦП от текущего процесса
-        :param cpu: процессор для освобождения
-        :return: старый выгруженный процесс
-        """
-        process = cpu.current_process
-        self.save_process_state_word(process)
-        cpu.current_process = None
-        return process.pid
 
 
 class IOProcessManager(BaseProcessManager):
@@ -134,11 +87,41 @@ class Scheduler:
         self.proc_table_ptr = proc_table  # ссылка на таблицу процессов
         self.quantum_size = quantum_size  # размер кванта времени в тактах моделирования
 
-        self.cpu_process_manager: CPUProcessManager = CPUProcessManager(self.proc_table_ptr)  # регулировщик ЦПр
-        self.io_process_manager: IOProcessManager = IOProcessManager(self.proc_table_ptr)  # регулировщик контроллеров IO
+        self.cpu_queue: Deque[int] = deque()
+        self.io_queue: Deque[int] = deque()
 
         self.memory_manager: MemoryManager = memory_manager  # менеджер памяти
         return
+
+    def add_process_to_cpu_queue(self, process_pid: int) -> None:
+        """
+        Добавляет процесс в конец очереди.
+        """
+        self.cpu_queue.append(process_pid)
+
+    def get_process_from_cpu_queue(self) -> Optional[int]:
+        """
+        Извлекает процесс из головы очереди и возвращает PID или возвращает None, если пуста
+        :return: int
+        """
+        if not self.cpu_queue:
+            return None
+        return self.cpu_queue.popleft()
+
+    def add_process_to_io_queue(self, process_pid: int) -> None:
+        """
+        Добавляет процесс в конец очереди.
+        """
+        self.io_queue.append(process_pid)
+
+    def get_process_from_io_queue(self) -> Optional[int]:
+        """
+        Извлекает процесс из головы очереди и возвращает PID или возвращает None, если пуста
+        :return: int
+        """
+        if not self.io_queue:
+            return None
+        return self.io_queue.popleft()
 
     def dispatch_io(self, io_controller: IOController) -> None:
         """
