@@ -1,5 +1,6 @@
 from typing import *
 from abstractions.Process import *
+from managers.InterruptHandler import Interrupt, InterruptType, InterruptHandler
 
 
 # класс-перечисление состояний процессора
@@ -19,7 +20,7 @@ class IOController:
         self.current_ticks_executed: int = 0  # количество тактов команды ввода-вывода, которое уже выполнено
         self.total_ticks_executed = 0  # общее количество выполенных тактов контроллером (для статистики)
 
-        self.interrupt_handler = None
+        self.interrupt_handler: Optional[InterruptHandler] = None
 
 
     @property
@@ -45,7 +46,8 @@ class IOController:
         assert isinstance(self.current_process.current_command, IOCommand)  # для контроля,
         # что работаем над командой ввода-вывода
         if self.current_process.current_command.duration == self.current_ticks_executed:
-            self.current_process.current_state = ProcessState.IO_END  # сигнал для планировщика
+            interrupt = Interrupt(InterruptType.PROCESS_IO_END, self.current_process.pid, self.device_id)
+            self.interrupt_handler.raise_interrupt(interrupt)
         else:
             self.current_ticks_executed += 1
             self.total_ticks_executed += 1

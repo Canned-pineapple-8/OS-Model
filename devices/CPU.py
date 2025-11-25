@@ -11,7 +11,7 @@ class CPUState(Enum):
 
 
 class CPU:
-    def __init__(self, memory_ptr: Memory, device_id: int) -> None:
+    def __init__(self, memory_ptr: Memory, device_id: int, quantum_size: int) -> None:
         self.device_id = device_id
         self.current_state = CPUState.IDLE
         self._current_process: Optional[Process] = None
@@ -22,6 +22,8 @@ class CPU:
         self.memory_ptr = memory_ptr
 
         self.interrupt_handler: Optional[InterruptHandler] = None
+        self.quantum_size = quantum_size  # размер кванта времени в тактах моделирования
+
         return
 
     @property
@@ -53,6 +55,10 @@ class CPU:
             return
         self.total_commands_executed += 1
         self.ticks_executed += 1
+        if self.ticks_executed == self.quantum_size:
+            interrupt = Interrupt(InterruptType.QUANTUM_ENDED, self.current_process.pid, self.device_id)
+            self.interrupt_handler.raise_interrupt(interrupt)
+            return
         command = self.current_process.generate_command()
         match command:
             case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):
@@ -62,11 +68,15 @@ class CPU:
                 self.write_result(result, self.current_process.process_memory_config.result_block_address)
                 self.current_process.process_statistics.total_commands_counter += 1
             case ExitCommand():
-                self.current_process.current_state = ProcessState.TERMINATED
+                interrupt = Interrupt(InterruptType.PROCESS_TERMINATED,
+                                      self.current_process.pid, self.device_id)
+                self.interrupt_handler.raise_interrupt(interrupt)
             case IOCommand():
                 self.current_process.process_statistics.io_commands_counter += 1
                 self.current_process.process_statistics.total_commands_counter += 1
-                self.current_process.current_state = ProcessState.IO_INIT
+                interrupt = Interrupt(InterruptType.PROCESS_IO_INIT,
+                                      self.current_process.pid, self.device_id)
+                self.interrupt_handler.raise_interrupt(interrupt)
             case _:
                 raise RuntimeError("Неизвестный тип команды")
 

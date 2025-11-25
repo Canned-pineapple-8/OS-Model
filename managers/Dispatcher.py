@@ -1,14 +1,15 @@
-from typing import Dict, List
+from typing import Dict
+from typing import TYPE_CHECKING
+
 from abstractions.Process import Process, ProcessState
-from devices.CPU import CPU
-from devices.IOController import IOController
 
 
 class Dispatcher:
-    def __init__(self, proc_table_ptr: Dict[int, Process], cpus: List[CPU], ios: List[IOController]):
+    def __init__(self, proc_table_ptr: Dict[int, Process], cpus, ios, scheduler):
         self.proc_table_ptr = proc_table_ptr
         self.cpus_ptr = cpus
         self.ios_ptr = ios
+        self.scheduler = scheduler
 
     def change_process_state(self, process_pid:int, new_state:ProcessState):
         self.proc_table_ptr[process_pid].current_state = new_state
@@ -28,7 +29,7 @@ class Dispatcher:
         """
         return self.proc_table_ptr[process_pid]
 
-    def load_task_to_CPU(self, cpu: CPU, process_pid: int) -> None:
+    def load_task_to_CPU(self, cpu, process_pid: int) -> None:
         """
         Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
         :param process_pid: PID процесса для загрузки
@@ -38,7 +39,7 @@ class Dispatcher:
         cpu.current_process = process
         self.change_process_state(process_pid, ProcessState.RUNNING)
 
-    def load_task_to_IO(self, io: IOController, process_pid: int) -> None:
+    def load_task_to_IO(self, io, process_pid: int) -> None:
         """
         Загружает процесс на исполнение переданному ЦП, выставляет необходимые состояния ЦП и процесса
         :param io: контроллер, в который будет загружена задача
@@ -58,4 +59,26 @@ class Dispatcher:
         self.save_process_state_word(process)
         device.current_process = None
         return process.pid
+
+    def dispatch_io(self, io_controller) -> None:
+        """
+        Проверить состояние контроллера IO, распределить процессы при необходимости
+        :param io_controller: IO контроллер
+        """
+        from devices.IOController import IOControllerState
+        if io_controller.current_state == IOControllerState.IDLE:
+            # если контроллер простаивает - назначаем ему задачу
+            if self.scheduler.io_queue:
+                self.load_task_to_IO(io_controller, self.scheduler.get_process_from_io_queue())
+
+    def dispatch_cpu(self, cpu) -> None:
+        """
+        Проверить состояние ЦПр, распределить процессы при необходимости
+        :param cpu: ЦПр для проверки
+        """
+        from devices.CPU import CPUState
+        if cpu.current_state is CPUState.IDLE:
+            # если ЦП простаивает - загружаем процесс
+            if self.scheduler.cpu_queue:
+                self.load_task_to_CPU(cpu, self.scheduler.get_process_from_cpu_queue())
 

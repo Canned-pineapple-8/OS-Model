@@ -11,7 +11,7 @@ from managers.MemoryManager import MemoryManager
 from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
 from utils.RandomFactory import RandomFactory
 from devices.Memory import Memory
-from managers.InterruptHandler import Interrupt, InterruptHandler
+from managers.InterruptHandler import InterruptHandler
 from managers.Dispatcher import Dispatcher
 
 class OSModel:
@@ -29,13 +29,13 @@ class OSModel:
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
         self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)
 
-        self.cpus = [CPU(self.physical_memory, i) for i in range(self.config.cpu.cpus_num)]
+        self.cpus = [CPU(self.physical_memory, i, self.config.cpu.quantum_size) for i in range(self.config.cpu.cpus_num)]
         self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size, self.memory_manager)  # инициализация планировщика и его структур
+        self.scheduler = Scheduler(self.proc_table, self.memory_manager)  # инициализация планировщика и его структур
 
-        self.dispatcher = Dispatcher(self.proc_table, self.cpus, self.io_controllers)
+        self.dispatcher = Dispatcher(self.proc_table, self.cpus, self.io_controllers, self.scheduler)
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
                                                   self.dispatcher, self.proc_table, self.memory_manager)
 
@@ -111,7 +111,7 @@ class OSModel:
             raise RuntimeError("Недостаточно памяти для загрузки нового процесса.")
 
         self.proc_table[process.pid] = process
-        self.scheduler.cpu_process_manager.add_process_to_queue(process_pid=process.pid)
+        self.scheduler.add_process_to_cpu_queue(process_pid=process.pid)
 
         return process.pid
 
@@ -135,8 +135,8 @@ class OSModel:
         self.proc_table.clear()
 
         # очистка планировщика
-        self.scheduler.io_process_manager.processes.clear()
-        self.scheduler.cpu_process_manager.processes.clear()
+        self.scheduler.cpu_queue.clear()
+        self.scheduler.io_queue.clear()
 
         # очистка CPU
         for cpu in self.cpus:
@@ -215,10 +215,17 @@ class OSModel:
         - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
         """
         for cpu in self.cpus:
-            self.scheduler.dispatch_cpu(cpu)
             cpu.execute_tick()
 
         for io in self.io_controllers:
-            self.scheduler.dispatch_io(io)
             io.execute_tick()
+
+        self.interrupt_handler.handle_interrupts()
+
+        for cpu in self.cpus:
+            self.dispatcher.dispatch_cpu(cpu)
+
+        for io in self.io_controllers:
+            self.dispatcher.dispatch_io(io)
+
         return

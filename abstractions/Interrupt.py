@@ -1,9 +1,4 @@
-from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Optional
-from devices.CPU import CPU, CPUState
-from devices.IOController import IOController, IOControllerState
-
 
 class InterruptType(Enum):
     QUANTUM_ENDED = 0
