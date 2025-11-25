@@ -9,10 +9,11 @@ class IOControllerState(Enum):
 
 
 class IOController:
-    def __init__(self):
+    def __init__(self, device_id: int):
         """
         Инициализация IO контроллера
         """
+        self.device_id = device_id
         self.current_state = IOControllerState.IDLE  # состояние контроллера
         self._current_process:Optional[Process] = None  # текущий исполняемый процесс
         self.current_ticks_executed: int = 0  # количество тактов команды ввода-вывода, которое уже выполнено

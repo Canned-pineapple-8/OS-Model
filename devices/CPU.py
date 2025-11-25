@@ -11,7 +11,8 @@ class CPUState(Enum):
 
 
 class CPU:
-    def __init__(self, memory_ptr: Memory) -> None:
+    def __init__(self, memory_ptr: Memory, device_id: int) -> None:
+        self.device_id = device_id
         self.current_state = CPUState.IDLE
         self._current_process: Optional[Process] = None
 
