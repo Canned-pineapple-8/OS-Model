@@ -10,8 +10,8 @@ class Dispatcher:
         self.cpus_ptr = cpus
         self.ios_ptr = ios
 
-    def change_process_state(self, process:Process, new_state:ProcessState):
-        process.current_state = new_state
+    def change_process_state(self, process_pid:int, new_state:ProcessState):
+        self.proc_table_ptr[process_pid].current_state = new_state
 
     def save_process_state_word(self, process_state_word: Process) -> None:
         """
@@ -36,7 +36,7 @@ class Dispatcher:
         """
         process = self.restore_process_state_word(process_pid)
         cpu.current_process = process
-        self.change_process_state(process, ProcessState.RUNNING)
+        self.change_process_state(process_pid, ProcessState.RUNNING)
 
     def load_task_to_IO(self, io: IOController, process_pid: int) -> None:
         """
@@ -46,16 +46,16 @@ class Dispatcher:
         """
         process = self.restore_process_state_word(process_pid)
         io.current_process = process
-        self.change_process_state(process, ProcessState.IO_BLOCKED)
+        self.change_process_state(process_pid, ProcessState.IO_BLOCKED)
 
-    def unload_task(self, cpu: CPU) -> int:
+    def unload_task(self, device) -> int:
         """
         Освобождает переданный ЦП от текущего процесса
         :param cpu: процессор для освобождения
         :return: старый выгруженный процесс
         """
-        process = cpu.current_process
+        process = device.current_process
         self.save_process_state_word(process)
-        cpu.current_process = None
+        device.current_process = None
         return process.pid
 

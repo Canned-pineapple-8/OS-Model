@@ -13,7 +13,7 @@ class InterruptType(Enum):
 
 
 class Interrupt:
-    def __init__(self, type: InterruptType, pid_process: int, device_id: int):
+    def __init__(self, type: InterruptType, pid_process: int, device_called_id: int):
         self.pid_process = pid_process
         self.type = type
-        self.device_id = device_id
+        self.device_called_id = device_called_id

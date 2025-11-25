@@ -28,8 +28,8 @@ class OSModel:
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
         self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)
 
-        self.cpus = [CPU(self.physical_memory) for _ in range(self.config.cpu.cpus_num)]
-        self.io_controllers = [IOController() for _ in range(self.config.io.ios_num)]
+        self.cpus = [CPU(self.physical_memory, i) for i in range(self.config.cpu.cpus_num)]
+        self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
         self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size, self.memory_manager)  # инициализация планировщика и его структур
