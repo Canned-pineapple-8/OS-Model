@@ -2,7 +2,7 @@ from abstractions.Process import Process, ProcessState
 from abstractions.Command import *
 from devices.Memory import *
 from devices.ALU import ALU
-
+from managers.InterruptHandler import Interrupt, InterruptHandler, InterruptType
 
 # класс-перечисление состояний процессора
 class CPUState(Enum):
@@ -20,6 +20,8 @@ class CPU:
         self.total_commands_executed = 0
 
         self.memory_ptr = memory_ptr
+
+        self.interrupt_handler: Optional[InterruptHandler] = None
         return
 
     @property
@@ -67,7 +69,6 @@ class CPU:
                 self.current_process.current_state = ProcessState.IO_INIT
             case _:
                 raise RuntimeError("Неизвестный тип команды")
-
 
     def is_process_awaits_IO(self) -> bool:
         if self.current_process is None:

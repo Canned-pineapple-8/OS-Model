@@ -20,6 +20,11 @@ class InterruptHandler:
         self.proc_table = proc_table
         self.memory_manager = memory_manager
 
+        for cpu in self.cpus:
+            cpu.interrupt_handler = self
+        for io in self.ios:
+            io.interrupt_handler = self
+
     def raise_interrupt(self, interrupt: Interrupt):
         self.interrupts_raised.append(interrupt)
 
@@ -35,6 +40,7 @@ class InterruptHandler:
                     self.dispatcher.load_task_to_CPU(self.cpus[device_id],
                                                      self.scheduler.get_process_from_cpu_queue())
                 case InterruptType.PROCESS_TERMINATED:
+                    self.dispatcher.change_process_state(process_pid, ProcessState.TERMINATED)
                     self.dispatcher.unload_task(self.cpus[device_id])
                     self.memory_manager.free_memory_from_process(process_pid)
                     self.proc_table.pop(process_pid)

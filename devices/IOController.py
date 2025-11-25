@@ -19,6 +19,9 @@ class IOController:
         self.current_ticks_executed: int = 0  # количество тактов команды ввода-вывода, которое уже выполнено
         self.total_ticks_executed = 0  # общее количество выполенных тактов контроллером (для статистики)
 
+        self.interrupt_handler = None
+
+
     @property
     def current_process(self) -> Optional[Process]:
         return self._current_process

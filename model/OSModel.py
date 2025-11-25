@@ -11,7 +11,8 @@ from managers.MemoryManager import MemoryManager
 from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
 from utils.RandomFactory import RandomFactory
 from devices.Memory import Memory
-
+from managers.InterruptHandler import Interrupt, InterruptHandler
+from managers.Dispatcher import Dispatcher
 
 class OSModel:
     def __init__(self, config_path: str) -> None:
@@ -33,6 +34,10 @@ class OSModel:
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
         self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size, self.memory_manager)  # инициализация планировщика и его структур
+
+        self.dispatcher = Dispatcher(self.proc_table, self.cpus, self.io_controllers)
+        self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
+                                                  self.dispatcher, self.proc_table, self.memory_manager)
 
         self.running = True
         return
