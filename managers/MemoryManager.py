@@ -15,6 +15,22 @@ class MemoryManager:
         # таблица сегментов - структура типа Dict[адрес_начала_блока, Tuple[Optional[PID_процесса], размер_блока]
         self.memory_map: Dict[int, Tuple[Optional[int], int]] = dict([(0, (None,self.available_memory))])
 
+        self.to_clean = [] # PID процессов на удаление
+
+    def get_current_proc_table_size(self):
+        return len(self.proc_table_ptr)
+
+    def schedule_process_to_be_removed(self, pid:int):
+        self.to_clean.append(pid)
+
+    def load_process(self, pid:int, process:Process):
+        self.proc_table_ptr[pid] = process
+
+    def get_process(self,pid:int):
+        if pid in self.proc_table_ptr:
+            return self.proc_table_ptr[pid]
+        return None
+
     def find_free_block(self, req_size: int) -> Tuple[Optional[int], Optional[int]]:
         """
         Находит первый свободный блок размером >= req_size в таблице сегментов
@@ -100,4 +116,8 @@ class MemoryManager:
         else:
             self.available_memory += value
 
-
+    def free_resources(self):
+        for pid in self.to_clean:
+            self.free_memory_from_process(pid)
+            self.proc_table_ptr.pop(pid)
+        self.to_clean = []

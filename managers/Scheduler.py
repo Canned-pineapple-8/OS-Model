@@ -5,16 +5,12 @@ from managers.MemoryManager import MemoryManager
 
 
 class Scheduler:
-    def __init__(self, proc_table: Dict[int, Process], memory_manager: MemoryManager ) -> None:
+    def __init__(self) -> None:
         """
         Инициализация планировщика
         """
-        self.proc_table_ptr = proc_table  # ссылка на таблицу процессов
-
         self.cpu_queue: Deque[int] = deque()
         self.io_queue: Deque[int] = deque()
-
-        self.memory_manager: MemoryManager = memory_manager  # менеджер памяти
         return
 
     def add_process_to_cpu_queue(self, process_pid: int) -> None:

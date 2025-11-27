@@ -2,24 +2,27 @@ from typing import Dict
 from typing import TYPE_CHECKING
 
 from abstractions.Process import Process, ProcessState
+from managers.MemoryManager import MemoryManager
 
 
 class Dispatcher:
-    def __init__(self, proc_table_ptr: Dict[int, Process], cpus, ios, scheduler):
-        self.proc_table_ptr = proc_table_ptr
+    def __init__(self, memory_manager, cpus, ios, scheduler):
+        self.memory_manager = memory_manager
         self.cpus_ptr = cpus
         self.ios_ptr = ios
         self.scheduler = scheduler
 
     def change_process_state(self, process_pid:int, new_state:ProcessState):
-        self.proc_table_ptr[process_pid].current_state = new_state
+        process = self.memory_manager.get_process(process_pid)
+        if process:
+            process.current_state = new_state
 
     def save_process_state_word(self, process_state_word: Process) -> None:
         """
         Сохраняет слово состояния процесса
         :param process_state_word: слово состояния процесса
         """
-        self.proc_table_ptr[process_state_word.pid] = process_state_word
+        self.memory_manager.load_process(process_state_word.pid, process_state_word)
 
     def restore_process_state_word(self, process_pid: int) -> Process:
         """
@@ -27,7 +30,7 @@ class Dispatcher:
         :param process_pid: PID процесса
         :return: слово состояния процесса
         """
-        return self.proc_table_ptr[process_pid]
+        return self.memory_manager.get_process(process_pid)
 
     def load_task_to_CPU(self, cpu, process_pid: int) -> None:
         """

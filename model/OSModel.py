@@ -33,11 +33,11 @@ class OSModel:
         self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler(self.proc_table, self.memory_manager)  # инициализация планировщика и его структур
+        self.scheduler = Scheduler()  # инициализация планировщика и его структур
 
-        self.dispatcher = Dispatcher(self.proc_table, self.cpus, self.io_controllers, self.scheduler)
+        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler)
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
-                                                  self.dispatcher, self.proc_table, self.memory_manager)
+                                                  self.dispatcher, self.memory_manager)
 
         self.running = True
         return
@@ -104,13 +104,13 @@ class OSModel:
         :param process: задача (процесс) на загрузку
         :return: PID загруженного процесса
         """
-        if len(self.proc_table.items()) >= self.proc_table_size:
+        if self.memory_manager.get_current_proc_table_size() >= self.proc_table_size:
             raise RuntimeError("Достигнуто максимальное количество загруженных задач.")
 
         if self.calculate_available_memory() < process.process_memory_config.block_size:
             raise RuntimeError("Недостаточно памяти для загрузки нового процесса.")
 
-        self.proc_table[process.pid] = process
+        self.memory_manager.load_process(process.pid, process)
         self.scheduler.add_process_to_cpu_queue(process_pid=process.pid)
 
         return process.pid
@@ -161,20 +161,13 @@ class OSModel:
         self.running = False
         return
 
-    def remove_process_from_process_table(self, process_pid: int) -> None:
-        """
-        Удаляет процесс из таблицы процессов
-        :param process_pid: PID процесса для удаления
-        """
-        self.proc_table.pop(process_pid, None)
-        return
-
     def fill_processes_if_possible(self) -> None:
         """
         Заполняет память новыми процессами до достижения лимита.
         """
         new_process_memory = self.config.process_generation.min_memory
-        while self.calculate_available_memory() >= new_process_memory and len(self.proc_table) < self.proc_table_size:
+        while self.calculate_available_memory() >= new_process_memory \
+                and self.memory_manager.get_current_proc_table_size() < self.proc_table_size:
             # генерация параметров
             commands_config = ProcessCommandsConfig()
             commands_config.total_commands_cnt = \
@@ -214,6 +207,8 @@ class OSModel:
         - планировщик распределяет задачи между контроллерами ввода-вывода (если есть необходимость)
         - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
         """
+        self.fill_processes_if_possible()
+
         for cpu in self.cpus:
             cpu.execute_tick()
 
@@ -227,5 +222,7 @@ class OSModel:
 
         for io in self.io_controllers:
             self.dispatcher.dispatch_io(io)
+
+        self.memory_manager.free_resources()
 
         return
