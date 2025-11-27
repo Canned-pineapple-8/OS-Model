@@ -33,7 +33,8 @@ class SpeedConfig:
 # генерация процессов
 @dataclass
 class ProcessGenerationConfig:
-    min_memory: int = 10
+    min_memory: int = 3
+    max_memory: int = 10
     total_commands_min: int = 1
     total_commands_max: int = 10
     io_percentage_min: float = 0.0

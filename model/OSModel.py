@@ -165,7 +165,8 @@ class OSModel:
         """
         Заполняет память новыми процессами до достижения лимита.
         """
-        new_process_memory = self.config.process_generation.min_memory
+        new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
+                                                                     self.config.process_generation.max_memory)
         while self.calculate_available_memory() >= new_process_memory \
                 and self.memory_manager.get_current_proc_table_size() < self.proc_table_size:
             # генерация параметров

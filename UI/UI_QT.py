@@ -9,6 +9,7 @@ import sys
 from UI.IOColumn import IOColumn
 from UI.CPUColumn import CPUColumn
 from UI.ProcessList import ProcessListWidget
+from UI.MemoryViewer import MemoryViewer
 MONO_FONT = "Cascadia Mono"
 
 
@@ -31,8 +32,17 @@ class OSUI(QMainWindow):
         self.speed_label = QLabel(f"Скорость: {os_model.speed:.2f} тактов/сек")
         self.speed_label.setFont(QFont(MONO_FONT, 12))
         top_panel.addWidget(self.speed_label)
+
+        # >>> ДОБАВЛЯЕМ КНОПКУ ПРОСМОТРА ПАМЯТИ <<<
+        mem_btn = QPushButton("Память")
+        mem_btn.setFont(QFont(MONO_FONT, 12))
+        mem_btn.clicked.connect(self.show_memory_viewer)
+        top_panel.addWidget(mem_btn)
+        # >>> КОНЕЦ ДОБАВЛЕНИЯ <<<
+
         top_panel.addStretch()
         main_layout.addLayout(top_panel)
+
 
         # слева (CPUs+IO) | справа (список процессов)
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -140,6 +150,13 @@ class OSUI(QMainWindow):
         # dialog for processes
         self.process_dialog = None
         self.closed = False
+
+    def show_memory_viewer(self):
+        try:
+            viewer = MemoryViewer(self.os_model.memory_manager)
+            viewer.exec()
+        except Exception as e:
+            self.append_text(f"[Ошибка MemoryViewer]: {e}")
 
     def append_text(self, txt: str):
         self.text_area.append(txt)
