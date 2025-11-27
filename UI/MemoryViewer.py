@@ -17,20 +17,18 @@ class MemoryViewer(QDialog):
         self.setWindowTitle("Использование памяти")
         self.resize(900, 600)
 
-        self.labels = []   # QLabel для ячеек
+        self.labels = []
         self.columns = 25
 
-        # === Цвета процессов ===
         self.process_colors = {}
         self.color_palette = [
-            "#ff6f61",  # красный
             "#8BC34A",  # зеленый
             "#42A5F5",  # голубой
-            "#AB47BC",  # фиолетовый
-            "#FFB300",  # желтый
             "#26A69A",  # бирюзовый
-            "#EC407A",  # розовый
-            "#7E57C2",  # сиреневый
+
+            "#4CAF50",  # насыщенный зеленый
+            "#AB47BC",  # фиолетовый
+            "#FFA726",  # оранжево-янтарный
         ]
 
         self.setStyleSheet("""
@@ -58,15 +56,11 @@ class MemoryViewer(QDialog):
         self.create_cells()
         self.update_view()
 
-        # === Таймер автообновления ===
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_view)
         self.timer.start(300)
 
-    # ----------------------------------------------------------------------
-
     def get_color_for_pid(self, pid):
-        """Назначает уникальный цвет PID при первом появлении."""
         if pid not in self.process_colors:
             color = self.color_palette[
                 len(self.process_colors) % len(self.color_palette)
@@ -74,10 +68,7 @@ class MemoryViewer(QDialog):
             self.process_colors[pid] = color
         return self.process_colors[pid]
 
-    # ----------------------------------------------------------------------
-
     def create_cells(self):
-        """Создаёт сетку QLabel по количеству адресов памяти."""
         total = self.memory.physical_memory_size
         cell_size = 32
 
@@ -94,21 +85,17 @@ class MemoryViewer(QDialog):
             self.grid.addWidget(label, row, col)
             self.labels.append(label)
 
-    # ----------------------------------------------------------------------
-
     def update_view(self):
         total = self.memory.physical_memory_size
 
         mem_map = self.memory_manager.memory_map
         address_to_pid = [None] * total
 
-        # создаём адреса → PID
         for start, (pid, block_size) in mem_map.items():
             for i in range(block_size):
                 if 0 <= start + i < total:
                     address_to_pid[start + i] = pid
 
-        # обновляем отображение памяти
         for index in range(total):
             label = self.labels[index]
             pid = address_to_pid[index]
@@ -117,7 +104,7 @@ class MemoryViewer(QDialog):
             label.setText("" if value is None else str(value))
 
             if pid is None:
-                bg = "#1c1c22"   # свободная память
+                bg = "#1c1c22"
             else:
                 bg = self.get_color_for_pid(pid)
 
@@ -130,9 +117,6 @@ class MemoryViewer(QDialog):
                 }}
             """)
 
-    # ----------------------------------------------------------------------
-
     def closeEvent(self, event):
-        """Останавливаем таймер при закрытии окна."""
         self.timer.stop()
         super().closeEvent(event)

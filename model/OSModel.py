@@ -194,10 +194,15 @@ class OSModel:
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
+            if block_start == -1:
+                return
+
             new_process.process_memory_config.block_start = block_start
 
             new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
             new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
+            new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
+                                                                         self.config.process_generation.max_memory)
         return
 
     def perform_tick(self) -> None:

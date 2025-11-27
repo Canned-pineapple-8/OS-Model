@@ -58,7 +58,7 @@ class MemoryManager:
         """
         free_block = self.find_free_block(req_size=req_size)
         if free_block == (None, None):
-            raise RuntimeError(f"Недостаточно памяти для процесса {process_pid} (требуемое количество: {req_size})")
+            return -1
         address, free_block_size = free_block
         self.memory_map[address] = (process_pid, req_size)
         if free_block_size > req_size:
@@ -82,6 +82,10 @@ class MemoryManager:
 
         start_address = process_address
         new_size = process_size
+
+        # очищаем память от арифметических значений
+        for i in range(process_size):
+            self.memory_ptr.write(None, start_address + i)
 
         # проверяем левый соседний блок
         left = start_address - 1

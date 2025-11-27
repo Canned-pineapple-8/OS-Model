@@ -33,16 +33,14 @@ class OSUI(QMainWindow):
         self.speed_label.setFont(QFont(MONO_FONT, 12))
         top_panel.addWidget(self.speed_label)
 
-        # >>> ДОБАВЛЯЕМ КНОПКУ ПРОСМОТРА ПАМЯТИ <<<
+        # кнопка просмотра памяти
         mem_btn = QPushButton("Память")
         mem_btn.setFont(QFont(MONO_FONT, 12))
         mem_btn.clicked.connect(self.show_memory_viewer)
         top_panel.addWidget(mem_btn)
-        # >>> КОНЕЦ ДОБАВЛЕНИЯ <<<
 
         top_panel.addStretch()
         main_layout.addLayout(top_panel)
-
 
         # слева (CPUs+IO) | справа (список процессов)
         splitter = QSplitter(Qt.Orientation.Horizontal)
