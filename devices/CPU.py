@@ -97,4 +97,3 @@ class CPU:
         if self.ticks_executed == self.quantum_size:
             interrupt = Interrupt(InterruptType.QUANTUM_ENDED, self.current_process.pid, self.device_id)
             self.interrupt_handler.raise_interrupt(interrupt)
-            return
