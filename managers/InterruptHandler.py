@@ -1,33 +1,38 @@
 from abstractions.Interrupt import InterruptType, Interrupt
-from typing import List, Dict
-#from devices.CPU import CPU
-#from devices.IOController import IOController
-#from managers.Scheduler import Scheduler
+from typing import List
 from managers.MemoryManager import MemoryManager
 from managers.Dispatcher import Dispatcher
-from abstractions.Process import Process, ProcessState
+from abstractions.Process import ProcessState
 
 
+# класс, моделирующий работу обработчика прерываний
 class InterruptHandler:
     def __init__(self, cpus_ptr, ios_ptr,
                  scheduler_ptr, dispatcher_ptr: Dispatcher,
                  memory_manager: MemoryManager):
-        self.interrupts_raised: List[Interrupt] = []
-        self.cpus = cpus_ptr
-        self.ios = ios_ptr
-        self.dispatcher = dispatcher_ptr
-        self.scheduler = scheduler_ptr
-        self.memory_manager = memory_manager
+        self.interrupts_raised: List[Interrupt] = []  # список прерываний, вызванных за такт
+        self.cpus = cpus_ptr  # указатель на центральные процессоры
+        self.ios = ios_ptr  # указатель на контроллеры ввода-вывода
+        self.dispatcher = dispatcher_ptr  # указатель на регулировщика
+        self.scheduler = scheduler_ptr  # указатель на планировщика
+        self.memory_manager = memory_manager  # указатель на менеджера памяти
 
         for cpu in self.cpus:
-            cpu.interrupt_handler = self
+            cpu.interrupt_handler = self  # выставляем на каждый ЦП указатель на себя
         for io in self.ios:
-            io.interrupt_handler = self
+            io.interrupt_handler = self  # выставляем на каждый IO указатель на себя
 
     def raise_interrupt(self, interrupt: Interrupt):
+        """
+        Вызвать прерывание (добавить в соответствующую структуру для их накопления)
+        :param interrupt: прерывание
+        """
         self.interrupts_raised.append(interrupt)
 
     def handle_interrupts(self):
+        """
+        Обработать все накопленные прерывания
+        """
         for interrupt in self.interrupts_raised:
             process_pid = interrupt.pid_process
             device_id = interrupt.device_called_id
