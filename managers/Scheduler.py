@@ -1,7 +1,5 @@
 from collections import deque
-from typing import Dict, Optional, Deque
-from abstractions.Process import Process
-from managers.MemoryManager import MemoryManager
+from typing import Optional, Deque
 
 
 class Scheduler:
