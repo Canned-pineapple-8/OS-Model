@@ -1,5 +1,6 @@
 from abstractions.Process import Process, ProcessState
 
+
 # класс, моделирующий работу регулировщика
 class Dispatcher:
     def __init__(self, memory_manager, cpus, ios, scheduler):

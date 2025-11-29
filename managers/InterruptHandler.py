@@ -65,4 +65,6 @@ class InterruptHandler:
                     if self.scheduler.io_queue:
                         self.dispatcher.load_task_to_IO(self.ios[device_id],
                                                         self.scheduler.get_process_from_io_queue())
+                case _:
+                    raise RuntimeError("Неизвестный тип прерывания.")
         self.interrupts_raised.clear()
