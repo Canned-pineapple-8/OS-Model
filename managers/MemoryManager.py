@@ -17,16 +17,34 @@ class MemoryManager:
 
         self.to_clean = [] # PID процессов на удаление
 
-    def get_current_proc_table_size(self):
+    def get_current_proc_table_size(self) -> int:
+        """
+        Вернуть текущее количество элементов в таблице процессов
+        :return:
+        """
         return len(self.proc_table_ptr)
 
-    def schedule_process_to_be_removed(self, pid:int):
+    def schedule_process_to_be_removed(self, pid:int) -> None:
+        """
+        Добавить процесс в очередь на освобождение ресурсов (при его завершении)
+        :param pid: PID процесса, который необходимо удалить
+        """
         self.to_clean.append(pid)
 
-    def load_process(self, pid:int, process:Process):
+    def load_process(self, pid:int, process:Process) -> None:
+        """
+        Добавить процесс в таблицу процессов (при создании)
+        :param pid: PID процесса
+        :param process: слово состояния процесса
+        """
         self.proc_table_ptr[pid] = process
 
-    def get_process(self,pid:int):
+    def get_process(self,pid:int) -> Optional[Process]:
+        """
+        Вернуть слово состояния процесса, если он есть в таблице процессов
+        :param pid:
+        :return:
+        """
         if pid in self.proc_table_ptr:
             return self.proc_table_ptr[pid]
         return None
@@ -120,7 +138,11 @@ class MemoryManager:
         else:
             self.available_memory += value
 
-    def free_resources(self):
+    def free_resources(self) -> None:
+        """
+        Освободить ресурсы под все завершённые процессы
+        :return:
+        """
         for pid in self.to_clean:
             self.free_memory_from_process(pid)
             self.proc_table_ptr.pop(pid)
