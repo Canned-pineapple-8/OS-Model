@@ -1,5 +1,6 @@
 from model.Config import *
 
+
 class Speed:
     def __init__(self, config: OSConfig) -> None:
         """

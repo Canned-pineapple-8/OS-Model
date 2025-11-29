@@ -15,6 +15,40 @@ class MemoryManager:
         # таблица сегментов - структура типа Dict[адрес_начала_блока, Tuple[Optional[PID_процесса], размер_блока]
         self.memory_map: Dict[int, Tuple[Optional[int], int]] = dict([(0, (None,self.available_memory))])
 
+        self.to_clean = [] # PID процессов на удаление
+
+    def get_current_proc_table_size(self) -> int:
+        """
+        Вернуть текущее количество элементов в таблице процессов
+        :return:
+        """
+        return len(self.proc_table_ptr)
+
+    def schedule_process_to_be_removed(self, pid:int) -> None:
+        """
+        Добавить процесс в очередь на освобождение ресурсов (при его завершении)
+        :param pid: PID процесса, который необходимо удалить
+        """
+        self.to_clean.append(pid)
+
+    def load_process(self, pid:int, process:Process) -> None:
+        """
+        Добавить процесс в таблицу процессов (при создании)
+        :param pid: PID процесса
+        :param process: слово состояния процесса
+        """
+        self.proc_table_ptr[pid] = process
+
+    def get_process(self,pid:int) -> Optional[Process]:
+        """
+        Вернуть слово состояния процесса, если он есть в таблице процессов
+        :param pid:
+        :return:
+        """
+        if pid in self.proc_table_ptr:
+            return self.proc_table_ptr[pid]
+        return None
+
     def find_free_block(self, req_size: int) -> Tuple[Optional[int], Optional[int]]:
         """
         Находит первый свободный блок размером >= req_size в таблице сегментов
@@ -42,7 +76,7 @@ class MemoryManager:
         """
         free_block = self.find_free_block(req_size=req_size)
         if free_block == (None, None):
-            raise RuntimeError(f"Недостаточно памяти для процесса {process_pid} (требуемое количество: {req_size})")
+            return -1
         address, free_block_size = free_block
         self.memory_map[address] = (process_pid, req_size)
         if free_block_size > req_size:
@@ -66,6 +100,10 @@ class MemoryManager:
 
         start_address = process_address
         new_size = process_size
+
+        # очищаем память от арифметических значений
+        for i in range(process_size):
+            self.memory_ptr.write(None, start_address + i)
 
         # проверяем левый соседний блок
         left = start_address - 1
@@ -100,4 +138,12 @@ class MemoryManager:
         else:
             self.available_memory += value
 
-
+    def free_resources(self) -> None:
+        """
+        Освободить ресурсы под все завершённые процессы
+        :return:
+        """
+        for pid in self.to_clean:
+            self.free_memory_from_process(pid)
+            self.proc_table_ptr.pop(pid)
+        self.to_clean = []

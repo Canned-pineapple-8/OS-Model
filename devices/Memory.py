@@ -22,7 +22,7 @@ class Memory:
             raise RuntimeError("Попытка чтения памяти за допустимыми пределами.")
         return self.physical_memory[address]
 
-    def write(self, value:int, address:int) -> None:
+    def write(self, value:Optional[int], address:int) -> None:
         """
         Записать машинное слово value по адресу address
         :param value: слово для записи

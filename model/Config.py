@@ -1,31 +1,27 @@
 from dataclasses import dataclass, field
 
 
-# ---------------- MEMORY ----------------
-
+# параметры памяти
 @dataclass
 class MemoryConfig:
     total_memory: int = 1024
     proc_table_size: int = 64
 
 
-# ---------------- CPU ----------------
-
+# параметры ЦПр
 @dataclass
 class CPUConfig:
     cpus_num: int = 3
     quantum_size: int = 5
 
 
-# ---------------- IO ----------------
-
+# параметры IO
 @dataclass
 class IOConfig:
     ios_num: int = 3
 
 
-# ---------------- SPEED ----------------
-
+# параметры скорости
 @dataclass
 class SpeedConfig:
     speed: float = 1.0
@@ -34,11 +30,11 @@ class SpeedConfig:
     max_speed: float = 10.0
 
 
-# ---------------- PROCESS GENERATION ----------------
-
+# генерация процессов
 @dataclass
 class ProcessGenerationConfig:
-    min_memory: int = 10
+    min_memory: int = 3
+    max_memory: int = 10
     total_commands_min: int = 1
     total_commands_max: int = 10
     io_percentage_min: float = 0.0
@@ -47,9 +43,7 @@ class ProcessGenerationConfig:
     io_command_duration_max: int = 5
 
 
-
-# ---------------- COMMAND GENERATION ----------------
-
+# генерация команд
 @dataclass
 class CommandGenerationConfig:
     operand_min: int = 1
@@ -58,8 +52,7 @@ class CommandGenerationConfig:
     result_block_shift: int = 2
 
 
-# ---------------- ROOT CONFIG ----------------
-
+# основная структура-конфигурация
 @dataclass
 class OSConfig:
     memory: MemoryConfig = field(default_factory=MemoryConfig)

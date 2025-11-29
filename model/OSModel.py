@@ -11,6 +11,8 @@ from managers.MemoryManager import MemoryManager
 from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
 from utils.RandomFactory import RandomFactory
 from devices.Memory import Memory
+from managers.InterruptHandler import InterruptHandler
+from managers.Dispatcher import Dispatcher
 
 
 class OSModel:
@@ -23,16 +25,26 @@ class OSModel:
 
         self.config = self.load_config(config_path)
 
-        self.physical_memory = Memory(self.config.memory.total_memory)
+        self.physical_memory = Memory(self.config.memory.total_memory)  # структура эмулирующая
+        # физическую память процессов
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
-        self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)
+        self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)  # класс для управления памятью
+        # процессов
 
-        self.cpus = [CPU(self.physical_memory) for _ in range(self.config.cpu.cpus_num)]
-        self.io_controllers = [IOController() for _ in range(self.config.io.ios_num)]
+        # центральные процессоры
+        self.cpus = [CPU(self.physical_memory, i, self.config.cpu.quantum_size) for i in range(self.config.cpu.cpus_num)]
+        # контроллеры ввода-вывода
+        self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler(self.proc_table, self.config.cpu.quantum_size, self.memory_manager)  # инициализация планировщика и его структур
+        self.scheduler = Scheduler()  # инициализация планировщика и его структур
+
+        # регулировщик
+        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler)
+        # обработчик прерываний
+        self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
+                                                  self.dispatcher, self.memory_manager)
 
         self.running = True
         return
@@ -99,14 +111,14 @@ class OSModel:
         :param process: задача (процесс) на загрузку
         :return: PID загруженного процесса
         """
-        if len(self.proc_table.items()) >= self.proc_table_size:
+        if self.memory_manager.get_current_proc_table_size() >= self.proc_table_size:
             raise RuntimeError("Достигнуто максимальное количество загруженных задач.")
 
         if self.calculate_available_memory() < process.process_memory_config.block_size:
             raise RuntimeError("Недостаточно памяти для загрузки нового процесса.")
 
-        self.proc_table[process.pid] = process
-        self.scheduler.cpu_process_manager.add_process_to_queue(process_pid=process.pid)
+        self.memory_manager.load_process(process.pid, process)
+        self.scheduler.add_process_to_cpu_queue(process_pid=process.pid)
 
         return process.pid
 
@@ -124,14 +136,13 @@ class OSModel:
     def terminate(self) -> None:
         """
         Завершение моделирования (очистка структур и установление флага)
-        :return: void
         """
         # очистка таблицы процессов
         self.proc_table.clear()
 
         # очистка планировщика
-        self.scheduler.io_process_manager.processes.clear()
-        self.scheduler.cpu_process_manager.process_queue.clear()
+        self.scheduler.cpu_queue.clear()
+        self.scheduler.io_queue.clear()
 
         # очистка CPU
         for cpu in self.cpus:
@@ -156,20 +167,15 @@ class OSModel:
         self.running = False
         return
 
-    def remove_process_from_process_table(self, process_pid: int) -> None:
-        """
-        Удаляет процесс из таблицы процессов
-        :param process_pid: PID процесса для удаления
-        """
-        self.proc_table.pop(process_pid, None)
-        return
-
     def fill_processes_if_possible(self) -> None:
         """
         Заполняет память новыми процессами до достижения лимита.
         """
-        new_process_memory = self.config.process_generation.min_memory
-        while self.calculate_available_memory() >= new_process_memory and len(self.proc_table) < self.proc_table_size:
+        new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
+                                                                     self.config.process_generation.max_memory)
+        while self.calculate_available_memory() >= new_process_memory \
+                and self.memory_manager.get_current_proc_table_size() < self.proc_table_size:
+            # генерация параметров
             commands_config = ProcessCommandsConfig()
             commands_config.total_commands_cnt = \
                 RandomFactory.generate_random_int_value(self.config.process_generation.total_commands_min,
@@ -190,28 +196,48 @@ class OSModel:
 
             self.load_new_task(new_process)
 
+            # выделение памяти под процесс
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
+
+            if block_start == -1:
+                return
 
             new_process.process_memory_config.block_start = block_start
 
             new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
             new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
+            new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
+                                                                         self.config.process_generation.max_memory)
         return
 
     def perform_tick(self) -> None:
         """
         Выполняет один такт моделирования. В его ходе:
-        - планировщик распределяет задачи между ЦП (если есть необходимость)
-        - каждый ЦП выполняет один такт назначенного ему процесса
-        - планировщик распределяет задачи между контроллерами ввода-вывода (если есть необходимость)
-        - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
+        - если возможно, генерируются новые процессы в таблице процессов
+        - каждый ЦП выполняет такт моделирования
+        - каждый IO выполняет такт моделирования
+        - обработчик прерываний обрабатывает накопленные прерывания
+        - регулировщик проверяет состояния ЦП (на всякий случай)
+        - регулировщик проверяет состояния IO (на всякий случай)
+        - менеджер памяти освобождает ресурсы завершенных в ходе такта процессов
         """
+        self.fill_processes_if_possible()
+
         for cpu in self.cpus:
-            self.scheduler.dispatch_cpu(cpu)
             cpu.execute_tick()
 
         for io in self.io_controllers:
-            self.scheduler.dispatch_io(io)
             io.execute_tick()
+
+        self.interrupt_handler.handle_interrupts()
+
+        for cpu in self.cpus:
+            self.dispatcher.dispatch_cpu(cpu)
+
+        for io in self.io_controllers:
+            self.dispatcher.dispatch_io(io)
+
+        self.memory_manager.free_resources()
+
         return
