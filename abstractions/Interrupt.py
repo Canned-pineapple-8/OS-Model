@@ -4,7 +4,7 @@ from enum import Enum
 # тип прерывания
 class InterruptType(Enum):
     QUANTUM_ENDED = 0  # завершился квант времени процесса
-    PROCESS_TERMINATED = 1  # завершился процесс
+    PROCESS_TERMINATED = 1   # завершился процесс
     PROCESS_IO_INIT = 2  # процесс требует ввода-вывода
     PROCESS_IO_END = 3  # операция ввода-вывода процесса завершилась
 
