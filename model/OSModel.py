@@ -14,6 +14,7 @@ from devices.Memory import Memory
 from managers.InterruptHandler import InterruptHandler
 from managers.Dispatcher import Dispatcher
 
+
 class OSModel:
     def __init__(self, config_path: str) -> None:
         """
@@ -24,18 +25,24 @@ class OSModel:
 
         self.config = self.load_config(config_path)
 
-        self.physical_memory = Memory(self.config.memory.total_memory)
+        self.physical_memory = Memory(self.config.memory.total_memory)  # структура эмулирующая
+        # физическую память процессов
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
-        self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)
+        self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)  # класс для управления памятью
+        # процессов
 
+        # центральные процессоры
         self.cpus = [CPU(self.physical_memory, i, self.config.cpu.quantum_size) for i in range(self.config.cpu.cpus_num)]
+        # контроллеры ввода-вывода
         self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
         self.scheduler = Scheduler()  # инициализация планировщика и его структур
 
+        # регулировщик
         self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler)
+        # обработчик прерываний
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
                                                   self.dispatcher, self.memory_manager)
 
@@ -129,7 +136,6 @@ class OSModel:
     def terminate(self) -> None:
         """
         Завершение моделирования (очистка структур и установление флага)
-        :return: void
         """
         # очистка таблицы процессов
         self.proc_table.clear()
@@ -208,10 +214,13 @@ class OSModel:
     def perform_tick(self) -> None:
         """
         Выполняет один такт моделирования. В его ходе:
-        - планировщик распределяет задачи между ЦП (если есть необходимость)
-        - каждый ЦП выполняет один такт назначенного ему процесса
-        - планировщик распределяет задачи между контроллерами ввода-вывода (если есть необходимость)
-        - каждый контроллер ввода-вывода выполняет один такт назначенного ему процесса
+        - если возможно, генерируются новые процессы в таблице процессов
+        - каждый ЦП выполняет такт моделирования
+        - каждый IO выполняет такт моделирования
+        - обработчик прерываний обрабатывает накопленные прерывания
+        - регулировщик проверяет состояния ЦП (на всякий случай)
+        - регулировщик проверяет состояния IO (на всякий случай)
+        - менеджер памяти освобождает ресурсы завершенных в ходе такта процессов
         """
         self.fill_processes_if_possible()
 
