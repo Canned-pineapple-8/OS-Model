@@ -20,15 +20,22 @@ class IOController:
         self.current_ticks_executed: int = 0  # количество тактов команды ввода-вывода, которое уже выполнено
         self.total_ticks_executed = 0  # общее количество выполенных тактов контроллером (для статистики)
 
-        self.interrupt_handler: Optional[InterruptHandler] = None
+        self.interrupt_handler: Optional[InterruptHandler] = None  # указатель на обработчик прерываний
 
 
     @property
     def current_process(self) -> Optional[Process]:
+        """
+        Геттер для процесса
+        """
         return self._current_process
 
     @current_process.setter
     def current_process(self, proc: Optional[Process]) -> None:
+        """
+        Сеттер для процесса. Выставляет соответствующее состояние для контроллера
+        :param proc: процесс для выставления на контроллер
+        """
         self._current_process = proc
         if proc is None:
             self.current_state = IOControllerState.IDLE
