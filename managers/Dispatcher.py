@@ -1,18 +1,19 @@
-from typing import Dict
-from typing import TYPE_CHECKING
-
 from abstractions.Process import Process, ProcessState
-from managers.MemoryManager import MemoryManager
 
-
+# класс, моделирующий работу регулировщика
 class Dispatcher:
     def __init__(self, memory_manager, cpus, ios, scheduler):
-        self.memory_manager = memory_manager
-        self.cpus_ptr = cpus
-        self.ios_ptr = ios
-        self.scheduler = scheduler
+        self.memory_manager = memory_manager  # указатель на менеджера памяти
+        self.cpus_ptr = cpus  # указатель на центральные процессоры
+        self.ios_ptr = ios  # указатель на контроллеры ввода-вывода
+        self.scheduler = scheduler  # указатель на планировщика
 
-    def change_process_state(self, process_pid:int, new_state:ProcessState):
+    def change_process_state(self, process_pid:int, new_state:ProcessState) -> None:
+        """
+        Изменение состояния процесса
+        :param process_pid: PID процесса
+        :param new_state: новое состояние
+        """
         process = self.memory_manager.get_process(process_pid)
         if process:
             process.current_state = new_state
@@ -55,7 +56,7 @@ class Dispatcher:
     def unload_task(self, device) -> int:
         """
         Освобождает переданный ЦП от текущего процесса
-        :param cpu: процессор для освобождения
+        :param device: устройство для освобождения
         :return: старый выгруженный процесс
         """
         process = device.current_process
