@@ -8,44 +8,52 @@ from devices.ALU import ALU
 class CPUState(Enum):
     IDLE = 0  # простаивает
     RUNNING = 1  # работает
-    WAITING = 2  # ожидает (на будущее, возможно, ожидание команд ввода-вывода)
 
 
 class CPU:
     def __init__(self, memory_ptr: Memory) -> None:
-        self.current_state = CPUState.IDLE
-        self.current_process: Optional[Process] = None
+        self.current_state = CPUState.IDLE  # текущее состояние ЦП
+        self.current_process: Optional[Process] = None  # текущий процесс на исполнении
 
-        self.ticks_executed = 0
-        self.total_commands_executed = 0
+        self.ticks_executed = 0  # текущее количество выполненных тактов кванта
+        self.total_commands_executed = 0  # общее количество выполненных команд (для статистики)
 
-        self.memory_ptr = memory_ptr
+        self.memory_ptr = memory_ptr  # указатель на память
         return
 
-    def read_operand(self, addr: int) -> int:
+    def read_operand(self, addr: int) -> Optional[int]:
+        """
+        Считать значение из памяти по адресу addr
+        :param addr: адрес
+        :return: считанное значение (int)
+        """
         return self.memory_ptr.read(addr)
 
     def write_result(self, value: int, addr: int) -> None:
+        """
+        Записывает значение value в память по адресу addr
+        :param value: значение для записи
+        :param addr: адрес для записи
+        """
         self.memory_ptr.write(value, addr)
 
     def execute_tick(self) -> None:
         """
-        Выполняет один такт текущего процесса (вызывает соответствующий метод процесса)
-        :return: количество оставшихся команд процесса (для отслеживания, выполнен он или нет)
+        Выполняет один такт текущего процесса
         """
         if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
             return
-        command = self.current_process.generate_command()
+        command = self.current_process.generate_command()  # генерация командф
         match command:
-            case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):
+            case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):  # арифметическая команда
                 op_1 = self.read_operand(addr1)
                 op_2 = self.read_operand(addr2)
                 result = ALU.execute_operation(operation_type=opType, operand_1=op_1, operand_2=op_2)
                 self.write_result(result, self.current_process.process_memory_config.result_block_address)
                 self.current_process.process_statistics.total_commands_counter += 1
-            case ExitCommand():
+            case ExitCommand():  # команда завершения
                 self.current_process.current_state = ProcessState.TERMINATED
-            case IOCommand():
+            case IOCommand():  # команда ввода-вывода
                 self.current_process.current_state = ProcessState.IO_INIT
             case _:
                 raise RuntimeError("Неизвестный тип команды")
