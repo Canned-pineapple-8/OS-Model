@@ -1,7 +1,7 @@
 {
   "memory": {
     "total_memory": 500,
-    "proc_table_size": 10
+    "proc_table_size": 20
   },
 
   "cpu": {

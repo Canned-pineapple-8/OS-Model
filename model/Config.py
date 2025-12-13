@@ -61,3 +61,31 @@ class OSConfig:
     speed: SpeedConfig = field(default_factory=SpeedConfig)
     process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
     command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)
+
+
+# временные затраты ОС на выполнение служебных операций (в тактах)
+@dataclass
+class TimeCosts:
+    choose_process_time: int = 0  # затраты на выбор процесса для исполнения
+    change_process_state_to_io_time: int = 0  # затраты на изменение состояния
+    # процесса по обращению к вводу-выводу
+    change_process_state_to_io_end_time: int = 0  # затраты по обслуживанию сигнала окончания
+    # ввода-вывода
+    load_process_time: int = 0  # затраты на загрузку нового задания
+    data_request_time: int = 0  # затраты на общение с общими данными
+
+# сбор статистики для отображения и вычислений
+@dataclass
+class OSStats:
+    tasks_loaded: int = 0  # число загруженных заданий
+    system_costs: float = 0  # системные затраты ОС (в процентах)
+    running_time: int = 0  # время работы системы (в тактах)
+    tasks_finished_multi: int = 0  # число выполненных заданий с момента начала моделирования
+    average_task_processing_time: float = 0  # оборотное время
+    tasks_finished_single: int = 0  # число заданий, которые могли бы выполниться за время running_time
+    # в однопрограммной ОС
+    system_performance: float = 0  # производительность модели по сравнению с однопрограммной (в процентах)
+
+
+
+
