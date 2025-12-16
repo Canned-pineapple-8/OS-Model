@@ -77,14 +77,14 @@ SystemParamsWidget QScrollBar::sub-page:vertical {
 
 #SystemParamsTitle {
     font-family: "Cascadia Mono";
-    font-size: 12px;
+    font-size: 16px;
     font-weight: bold;
     color: #f0f0f0;
 }
 
 #MemoryButton {
     font-family: "Cascadia Mono";
-    font-size: 11px;
+    font-size: 16px;
     background-color: #ff6f61;
     color: white;
     padding: 6px 12px;

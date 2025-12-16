@@ -32,7 +32,7 @@ class IOColumn(QWidget):
         title.setFont(QFont(MONO_FONT, 12, weight=QFont.Weight.Bold))
         layout.addWidget(title)
 
-        self.info_keys = ["PID", "Длительность IO команды", "Счетчик IO команд", "Тип текущей команды", "Состояние"]
+        self.info_keys = ["PID", "Длительность IO команды", "Счетчик тактов команды", "Тип текущей команды", "Состояние"]
         self.labels = {}
         for key in self.info_keys:
             lbl = QLabel(f"{key}: -")

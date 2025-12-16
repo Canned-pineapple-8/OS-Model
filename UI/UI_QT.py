@@ -126,7 +126,7 @@ class OSUI(QMainWindow):
         self.process_params_widget.setMinimumWidth(220)
         upper_split.addWidget(self.process_params_widget)
 
-        upper_split.setSizes([300, 180])
+        upper_split.setSizes([240, 240])
         right_layout.addWidget(upper_split)
 
         # виджет параметров системы
@@ -232,7 +232,7 @@ class OSUI(QMainWindow):
                     info = {
                         "PID": process.pid,
                         "Длительность IO команды": duration,
-                        "Счетчик IO команд": getattr(io, "current_ticks_executed", "-"),
+                        "Счетчик тактов команды": getattr(io, "current_ticks_executed", "-"),
                         "Тип текущей команды": command_type,
                         "Состояние": state
                     }

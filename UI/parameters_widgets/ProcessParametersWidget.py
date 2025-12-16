@@ -1,6 +1,9 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QLabel
+from PyQt6.QtGui import QFont
 from UI.parameters_widgets.KeyValuePanel import KeyValuePanel
 from dataclasses import asdict
+
+MONO_FONT = "Cascadia Mono"
 
 
 class ProcessParamsWidget(QWidget):
@@ -15,17 +18,23 @@ class ProcessParamsWidget(QWidget):
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(6)
 
+        title = QLabel("Параметры процессов")
+        title.setFont(QFont(MONO_FONT, 12, weight=QFont.Weight.Bold))
+        title.setObjectName("title")
+        layout.addWidget(title)
+
         self.params_panel = KeyValuePanel()
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setObjectName("params_scroll")
 
         container = QWidget()
         vbox = QVBoxLayout(container)
         vbox.setContentsMargins(6, 6, 6, 6)
         vbox.addWidget(self.params_panel)
-
         scroll.setWidget(container)
+
         layout.addWidget(scroll)
 
         self.setObjectName("ProcessParamsWidget")

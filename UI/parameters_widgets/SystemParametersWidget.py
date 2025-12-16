@@ -17,12 +17,12 @@ class SystemParamsWidget(QWidget):
 
         header = QHBoxLayout()
         title = QLabel("Параметры системы")
-        title.setFont(QFont(MONO_FONT, 12, weight=QFont.Weight.Bold))
+        title.setFont(QFont(MONO_FONT, 16, weight=QFont.Weight.Bold))
         header.addWidget(title)
         header.addStretch()
 
         self.mem_btn = QPushButton("Память")
-        self.mem_btn.setFont(QFont(MONO_FONT, 11))
+        self.mem_btn.setFont(QFont(MONO_FONT, 16))
         self.mem_btn.clicked.connect(memory_btn_callback)
         header.addWidget(self.mem_btn)
         self.layout.addLayout(header)
