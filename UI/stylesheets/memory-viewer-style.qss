@@ -1,0 +1,37 @@
+#MemoryViewer {
+    background-color: #121217;
+}
+
+#MemoryViewer QWidget {
+    background-color: #121217;
+    color: #f0f0f0;
+}
+
+#MemoryViewer QScrollArea {
+    background-color: #121217;
+    border: none;
+}
+
+QLabel#MemoryCell {
+    font-family: "Cascadia Mono";
+    font-size: 12px;
+    border: 1px solid #2a2a30;
+    border-radius: 4px;
+    background-color: #1c1c22;
+    color: #f0f0f0;
+}
+
+QLabel#MemoryCell[state="free"] {
+    background-color: #1c1c22;
+}
+
+QLabel#MemoryCell[state="used"] {
+    background-color: transparent;
+}
+
+QLabel {{
+    background-color: {bg};
+    color: #f0f0f0;
+    border: 1px solid #2a2a30;
+    border-radius: 4px;
+}}

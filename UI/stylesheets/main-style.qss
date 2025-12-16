@@ -20,3 +20,13 @@ QLineEdit, QTextEdit {
 }
 
 QLabel { color: #f0f0f0; }
+
+QSplitter::handle {
+    background-color: #262630;
+    border: 1px solid #3a3a44;
+    width: 8px;
+}
+
+QSplitter::handle:hover {
+    background-color: #ff6f61;
+}

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (
-    QWidget, QLabel, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView
+    QWidget, QLabel, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy,
+    QPushButton
 )
 from PyQt6.QtGui import QFont, QColor
 
@@ -10,10 +11,11 @@ MONO_FONT = "Cascadia Mono"
 class ProcessListWidget(QWidget):
     def __init__(self, os_model, parent=None):
         super().__init__(parent)
+        self._dialogs = []
         self.os_model = os_model
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(8)
 
         title = QLabel("Список процессов")
@@ -30,6 +32,7 @@ class ProcessListWidget(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         layout.addWidget(self.table)
         self.setLayout(layout)

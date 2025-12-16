@@ -1,0 +1,31 @@
+ProcessParamsWidget {
+    background-color: #121217;
+}
+
+ProcessParamsWidget QScrollArea {
+    background-color: #1c1c22;
+    border: none;
+}
+
+KeyValuePanel {
+    background-color: #1c1c22;
+}
+
+KeyValuePanel QLabel[role="key"] {
+    color: #cfd8dc;
+    font-family: 'Cascadia Mono';
+}
+
+KeyValuePanel QLabel[role="value"] {
+    color: #f0f0f0;
+    font-family: 'Cascadia Mono';
+}
+
+QWidget {
+    background-color: #1c1c22;
+}
+
+QScrollArea {
+     background-color: #1c1c22;
+     border: none;
+}

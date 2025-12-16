@@ -5,10 +5,18 @@ from PyQt6.QtGui import QFont
 
 MONO_FONT = "Cascadia Mono"
 
+
 # виджет колонки с ЦП
 class CPUColumn(QWidget):
-    def __init__(self, cpu_name, accent_color="#FF6F61", parent=None):
+    def __init__(self, cpu_name, parent=None):
         super().__init__(parent)
+
+        try:
+            with open("UI/stylesheets/device-card-style.qss", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        except Exception:
+            pass
+
         self.setMinimumWidth(220)
         self.setMinimumHeight(180)
 
@@ -18,7 +26,6 @@ class CPUColumn(QWidget):
 
         self.top_bar = QLabel()
         self.top_bar.setFixedHeight(6)
-        self.top_bar.setStyleSheet(f"background-color: {accent_color}; border-radius: 3px;")
         layout.addWidget(self.top_bar)
 
         title = QLabel(cpu_name)
@@ -33,18 +40,16 @@ class CPUColumn(QWidget):
             lbl.setContentsMargins(4, 2, 4, 2)
             layout.addWidget(lbl)
             self.labels[key] = lbl
+            lbl.setProperty("role", "cpu-info")
+            lbl.setProperty("key", key)
 
         layout.addStretch()
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
 
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #1f1f25;
-                border-radius: 10px;
-                color: #f0f0f0;
-            }
-        """)
+        self.setObjectName("DeviceColumn")
+        self.top_bar.setObjectName("CPUAccentBar")
+        title.setObjectName("DeviceTitle")
 
     def update_info(self, info: dict):
         for key, val in info.items():

@@ -1,0 +1,124 @@
+SystemParamsWidget {
+    background-color: #121217;
+    color: #f0f0f0;
+    border-radius: 6px;
+}
+
+SystemParamsWidget QLabel {
+    color: #f0f0f0;
+    font-family: 'Cascadia Mono';
+}
+
+SystemParamsWidget QPushButton {
+    background-color: #ff6f61;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: 'Cascadia Mono';
+}
+SystemParamsWidget QPushButton:hover {
+    background-color: #ff8978;
+}
+
+SystemParamsWidget QTabWidget::pane {
+    border: 1px solid #2a2a30;
+    border-radius: 6px;
+    background-color: #1c1c22;
+}
+
+SystemParamsWidget QTabBar::tab {
+    background-color: #262630;
+    color: #f0f0f0;
+    padding: 6px 12px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-family: 'Cascadia Mono';
+}
+
+SystemParamsWidget QTabBar::tab:selected {
+    background-color: #ff6f61;
+    color: white;
+}
+
+SystemParamsWidget QScrollArea {
+    background-color: #1c1c22;
+    border: none;
+}
+
+SystemParamsWidget QScrollBar:vertical {
+    background: #1c1c22;
+    width: 10px;
+    margin: 0px;
+    border-radius: 5px;
+}
+
+SystemParamsWidget QScrollBar::handle:vertical {
+    background: #3a3a44;
+    min-height: 24px;
+    border-radius: 5px;
+}
+SystemParamsWidget QScrollBar::handle:vertical:hover {
+    background: #50505c;
+}
+SystemParamsWidget QScrollBar::add-line:vertical,
+SystemParamsWidget QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+SystemParamsWidget QScrollBar::add-page:vertical,
+SystemParamsWidget QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+#SystemParamsWidget {
+    background-color: #121217;
+    border-radius: 6px;
+}
+
+#SystemParamsTitle {
+    font-family: "Cascadia Mono";
+    font-size: 12px;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+#MemoryButton {
+    font-family: "Cascadia Mono";
+    font-size: 11px;
+    background-color: #ff6f61;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+#MemoryButton:hover {
+    background-color: #ff8978;
+}
+
+#SystemParamsTabs::pane {
+    background-color: #1c1c22;
+    border: 1px solid #2a2a30;
+    border-radius: 6px;
+}
+
+#SystemParamsTabs QTabBar::tab {
+    background-color: #262630;
+    color: #f0f0f0;
+    padding: 6px 12px;
+    font-family: "Cascadia Mono";
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+#SystemParamsTabs QTabBar::tab:selected {
+    background-color: #ff6f61;
+    color: white;
+}
+
+#SystemParamsWidget QScrollArea {
+    background-color: #1c1c22;
+    border: none;
+}
+#SystemParamsWidget QScrollArea QWidget {
+    background-color: #1c1c22;
+}
+
