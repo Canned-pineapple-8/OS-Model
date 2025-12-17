@@ -36,5 +36,9 @@
     "operand_max": 10,
     "operands_block_shift": 0,
     "result_block_shift": 2
-  }
+  },
+
+  "random": {
+      "random_seed": 5
+    }
 }

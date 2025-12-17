@@ -1,8 +1,9 @@
 import json
 import time
+import random
 
 from model.Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
-    ProcessGenerationConfig, CommandGenerationConfig
+    ProcessGenerationConfig, CommandGenerationConfig, RandomConfig
 from abstractions.Speed import Speed
 from managers.Scheduler import Scheduler
 from devices.CPU import CPU, CPUState
@@ -24,6 +25,9 @@ class OSModel:
         self.running = False
 
         self.config = self.load_config(config_path)
+
+        # устанавливаем сид для воспроизводимости значений
+        random.seed(self.config.random.random_seed)
 
         self.physical_memory = Memory(self.config.memory.total_memory)  # структура эмулирующая
         # физическую память процессов
@@ -74,7 +78,8 @@ class OSModel:
             io=load_section(IOConfig, "io"),
             speed=load_section(SpeedConfig, "speed"),
             process_generation=load_section(ProcessGenerationConfig, "process_generation"),
-            command_generation=load_section(CommandGenerationConfig, "command_generation")
+            command_generation=load_section(CommandGenerationConfig, "command_generation"),
+            random=load_section(RandomConfig, "random")
         )
 
     @property

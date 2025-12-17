@@ -1,5 +1,9 @@
 from dataclasses import dataclass, field
 
+# параметры случайных величин
+@dataclass
+class RandomConfig:
+    random_seed: float = 1.0
 
 # параметры памяти
 @dataclass
@@ -61,30 +65,33 @@ class OSConfig:
     speed: SpeedConfig = field(default_factory=SpeedConfig)
     process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
     command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)
+    random: RandomConfig = field(default_factory=RandomConfig)
 
 
 # временные затраты ОС на выполнение служебных операций (в тактах)
 @dataclass
 class TimeCosts:
-    choose_process_time: int = 0  # затраты на выбор процесса для исполнения
-    change_process_state_to_io_time: int = 0  # затраты на изменение состояния
-    # процесса по обращению к вводу-выводу
-    change_process_state_to_io_end_time: int = 0  # затраты по обслуживанию сигнала окончания
+    t_next: float = 1  # затраты на выбор процесса для исполнения
+    t_state: float = 1  # затраты на переключение состояния процесса
+    t_init_io: float = 1  # затраты на инициализацию ввода-вывода
+    t_end_io: float = 1  # затраты по обслуживанию сигнала окончания
     # ввода-вывода
-    load_process_time: int = 0  # затраты на загрузку нового задания
-    data_request_time: int = 0  # затраты на общение с общими данными
+    t_load: float = 1  # затраты на загрузку нового задания
+    t_global: float = 1  # затраты на общение с общими данными
+
 
 # сбор статистики для отображения и вычислений
 @dataclass
 class OSStats:
     tasks_loaded: int = 0  # число загруженных заданий
-    system_costs: float = 0  # системные затраты ОС (в процентах)
-    running_time: int = 0  # время работы системы (в тактах)
-    tasks_finished_multi: int = 0  # число выполненных заданий с момента начала моделирования
-    average_task_processing_time: float = 0  # оборотное время
-    tasks_finished_single: int = 0  # число заданий, которые могли бы выполниться за время running_time
+    d_system: float = 0  # системные затраты ОС (в процентах)
+    t_multi: float = 0  # время работы системы (в тактах) (мультипрограммная система)
+    m_multi: float = 0  # число выполненных заданий с момента начала моделирования
+    t_proc_avg: float = 0  # оборотное время
+    t_mono: float = 0  # время выполнения m_multi Заданий в однопрограммной системе
+    m_mono: float = 0  # число заданий, которые могли бы выполниться за время running_time
     # в однопрограммной ОС
-    system_performance: float = 0  # производительность модели по сравнению с однопрограммной (в процентах)
+    d_multi: float = 0  # производительность модели по сравнению с однопрограммной (в процентах)
 
 
 
