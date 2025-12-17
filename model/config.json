@@ -5,12 +5,12 @@
   },
 
   "cpu": {
-    "cpus_num" : 3,
+    "cpus_num" : 1,
     "quantum_size": 5
   },
 
   "io": {
-    "ios_num" : 3
+    "ios_num" : 1
   },
 
   "speed": {

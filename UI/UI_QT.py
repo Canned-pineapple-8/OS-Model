@@ -59,7 +59,7 @@ class OSUI(QMainWindow):
         cpu_grid = QGridLayout()
         cpu_grid.setSpacing(8)
         self.cpu_columns = []
-        for i in range(3):
+        for i in range(self.os_model.config.cpu.cpus_num):
             c = CPUColumn(f"ЦП {i + 1}")
             self.cpu_columns.append(c)
             cpu_grid.addWidget(c, 0, i)
@@ -74,7 +74,7 @@ class OSUI(QMainWindow):
         io_grid = QGridLayout()
         io_grid.setSpacing(8)
         self.io_columns = []
-        for i in range(3):
+        for i in range(self.os_model.config.io.ios_num):
             io_c = IOColumn(f"IO {i + 1}")
             self.io_columns.append(io_c)
             io_grid.addWidget(io_c, 0, i)
