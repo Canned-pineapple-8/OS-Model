@@ -95,12 +95,15 @@ class SystemParamsWidget(QWidget):
 
         self.output_panel.bulk_set({k: "-" for k in self._out_getters})
 
-        self.mean_panel.bulk_set({
-            "T_mono_i (среднее)": "-",
-            "T_multi_i (среднее)": "-",
-            "D_exe (%)": "-",
-            "D_ready (%)": "-"
-        })
+        self._mean_getters = {
+            "T_mono (такты, среднее)": lambda: f"{self.os_model.stats.avg_process_stats.t_mono_avg:.3f}",
+            "T_multi (такты, среднее)": lambda: f"{self.os_model.stats.avg_process_stats.t_multi_avg:.3f}",
+            "D_exe (%, среднее)": lambda: f"{self.os_model.stats.avg_process_stats.d_exe_avg:.3f}",
+            "D_ready (%, среднее)": lambda: f"{self.os_model.stats.avg_process_stats.d_ready_avg:.3f}"
+        }
+
+        self.mean_panel.bulk_set({k: "-" for k in self._mean_getters})
+
 
     def refresh(self):
         for key, getter in self._out_getters.items():
@@ -108,3 +111,9 @@ class SystemParamsWidget(QWidget):
                 self.output_panel.set(key, getter())
             except Exception:
                 self.output_panel.set(key, "-")
+
+        for key, getter in self._mean_getters.items():
+            try:
+                self.mean_panel.set(key, getter())
+            except Exception:
+                self.mean_panel.set(key, "-")

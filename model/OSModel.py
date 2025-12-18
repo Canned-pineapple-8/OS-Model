@@ -254,5 +254,6 @@ class OSModel:
         self.memory_manager.free_resources()
 
         self.stats.recalc_system_params()
+        self.stats.recalc_avg_process_params()
 
         return
