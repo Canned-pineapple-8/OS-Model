@@ -253,6 +253,12 @@ class OSUI(QMainWindow):
         except Exception:
             pass
 
+        # обновление параметров системы
+        try:
+            self.sys_params.refresh()
+        except Exception:
+            pass
+
     # команды
     def process_command(self):
         cmd = self.cmd_entry.text().strip().lower()

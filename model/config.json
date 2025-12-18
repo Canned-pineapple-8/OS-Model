@@ -5,12 +5,12 @@
   },
 
   "cpu": {
-    "cpus_num" : 1,
+    "cpus_num" : 3,
     "quantum_size": 5
   },
 
   "io": {
-    "ios_num" : 1
+    "ios_num" : 3
   },
 
   "speed": {
@@ -40,5 +40,14 @@
 
   "random": {
       "random_seed": 5
-    }
+    },
+
+  "time_costs": {
+    "t_next": 0.05,
+    "t_state": 0.05,
+    "t_init_io": 0.1,
+    "t_end_io": 0.1,
+    "t_load": 0.1,
+    "t_global": 0.05
+  }
 }

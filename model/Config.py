@@ -56,18 +56,6 @@ class CommandGenerationConfig:
     result_block_shift: int = 2
 
 
-# основная структура-конфигурация
-@dataclass
-class OSConfig:
-    memory: MemoryConfig = field(default_factory=MemoryConfig)
-    cpu: CPUConfig = field(default_factory=CPUConfig)
-    io: IOConfig = field(default_factory=IOConfig)
-    speed: SpeedConfig = field(default_factory=SpeedConfig)
-    process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
-    command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)
-    random: RandomConfig = field(default_factory=RandomConfig)
-
-
 # временные затраты ОС на выполнение служебных операций (в тактах)
 @dataclass
 class TimeCosts:
@@ -80,19 +68,14 @@ class TimeCosts:
     t_global: float = 1  # затраты на общение с общими данными
 
 
-# сбор статистики для отображения и вычислений
+# основная структура-конфигурация
 @dataclass
-class OSStats:
-    tasks_loaded: int = 0  # число загруженных заданий
-    d_system: float = 0  # системные затраты ОС (в процентах)
-    t_multi: float = 0  # время работы системы (в тактах) (мультипрограммная система)
-    m_multi: float = 0  # число выполненных заданий с момента начала моделирования
-    t_proc_avg: float = 0  # оборотное время
-    t_mono: float = 0  # время выполнения m_multi Заданий в однопрограммной системе
-    m_mono: float = 0  # число заданий, которые могли бы выполниться за время running_time
-    # в однопрограммной ОС
-    d_multi: float = 0  # производительность модели по сравнению с однопрограммной (в процентах)
-
-
-
-
+class OSConfig:
+    memory: MemoryConfig = field(default_factory=MemoryConfig)
+    cpu: CPUConfig = field(default_factory=CPUConfig)
+    io: IOConfig = field(default_factory=IOConfig)
+    speed: SpeedConfig = field(default_factory=SpeedConfig)
+    process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
+    command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)
+    random: RandomConfig = field(default_factory=RandomConfig)
+    time_costs: TimeCosts = field(default_factory=TimeCosts)

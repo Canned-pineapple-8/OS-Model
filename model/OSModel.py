@@ -3,17 +3,18 @@ import time
 import random
 
 from model.Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
-    ProcessGenerationConfig, CommandGenerationConfig, RandomConfig
+    ProcessGenerationConfig, CommandGenerationConfig, RandomConfig, TimeCosts
 from abstractions.Speed import Speed
 from managers.Scheduler import Scheduler
 from devices.CPU import CPU, CPUState
 from devices.IOController import IOController, IOControllerState
 from managers.MemoryManager import MemoryManager
-from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
+from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig, ProcessState
 from utils.RandomFactory import RandomFactory
 from devices.Memory import Memory
 from managers.InterruptHandler import InterruptHandler
 from managers.Dispatcher import Dispatcher
+from abstractions.Statistics import Statistics, ProcessTimeStats, ProcessTimeRecordType
 
 
 class OSModel:
@@ -24,14 +25,17 @@ class OSModel:
         """
         self.running = False
 
+        self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
+
         self.config = self.load_config(config_path)
+        # статистика
+        self.stats = Statistics(self.config.time_costs, self.proc_table)
 
         # устанавливаем сид для воспроизводимости значений
         random.seed(self.config.random.random_seed)
 
-        self.physical_memory = Memory(self.config.memory.total_memory)  # структура эмулирующая
+        self.physical_memory = Memory(self.config.memory.total_memory, self.stats)  # структура эмулирующая
         # физическую память процессов
-        self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
         self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)  # класс для управления памятью
         # процессов
@@ -42,13 +46,13 @@ class OSModel:
         self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler()  # инициализация планировщика и его структур
+        self.scheduler = Scheduler(self.stats)  # инициализация планировщика и его структур
 
         # регулировщик
-        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler)
+        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler, self.stats)
         # обработчик прерываний
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
-                                                  self.dispatcher, self.memory_manager)
+                                                  self.dispatcher, self.memory_manager, self.stats)
 
         self.running = True
         return
@@ -79,7 +83,8 @@ class OSModel:
             speed=load_section(SpeedConfig, "speed"),
             process_generation=load_section(ProcessGenerationConfig, "process_generation"),
             command_generation=load_section(CommandGenerationConfig, "command_generation"),
-            random=load_section(RandomConfig, "random")
+            random=load_section(RandomConfig, "random"),
+            time_costs=load_section(TimeCosts, "time_costs")
         )
 
     @property
@@ -124,7 +129,8 @@ class OSModel:
 
         self.memory_manager.load_process(process.pid, process)
         self.scheduler.add_process_to_cpu_queue(process_pid=process.pid)
-
+        process.current_state = ProcessState.READY
+        self.stats.add_process_start_time(process.pid)
         return process.pid
 
     def perform_program_delay(self) -> None:
@@ -228,6 +234,8 @@ class OSModel:
         - менеджер памяти освобождает ресурсы завершенных в ходе такта процессов
         """
         self.fill_processes_if_possible()
+        self.stats.add_runtime_to_processes(self.proc_table)
+        self.stats.add_time_os_multi(1)
 
         for cpu in self.cpus:
             cpu.execute_tick()
@@ -244,5 +252,7 @@ class OSModel:
             self.dispatcher.dispatch_io(io)
 
         self.memory_manager.free_resources()
+
+        self.stats.recalc_system_params()
 
         return

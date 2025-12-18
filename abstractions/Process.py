@@ -4,7 +4,6 @@ from utils.RandomFactory import RandomFactory
 from abstractions.Command import Command, IOCommand, ExitCommand, ALUCommand, OpType
 from dataclasses import dataclass
 
-
 class ProcessState(Enum):
     NEW = 0  # только создан ("загружается")
     READY = 1  # готов к выполнению ("готов")
@@ -15,6 +14,7 @@ class ProcessState(Enum):
     MEM_BLOCKED = 6  # блокирован по обращению к памяти
     IO_BLOCKED = 7  # блокирован по вводу-выводу
     STOPPED = 8  # приостановлен
+    IO_RUNNING = 9  # команда ввода-вывода активно выполняется
 
 
 @dataclass
@@ -79,6 +79,7 @@ class Process:
             process_commands_config if process_commands_config is not None else ProcessCommandsConfig()
         )
 
+        self.stats = None  # статистика
         self.current_command = None  # текущая команда процесса
         return
 
