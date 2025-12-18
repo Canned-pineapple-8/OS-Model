@@ -21,7 +21,7 @@ class Dispatcher:
         if process:
             if process.current_state != new_state:
                 self.stats.add_time_os_multi(self.stats.time_costs.t_state)
-                self.stats.add_sys_time_os_multi(self.stats.time_costs.t_global)
+                self.stats.add_sys_time_os_multi(self.stats.time_costs.t_state)
 
             process.current_state = new_state
 
@@ -51,9 +51,7 @@ class Dispatcher:
         self.change_process_state(process_pid, ProcessState.RUNNING)
         self.stats.add_time_process(process_pid, ProcessTimeRecordType.T_SYS_MONO, self.stats.time_costs.t_load)
         self.stats.add_time_os_multi(self.stats.time_costs.t_load)
-        self.stats.add_sys_time_os_multi(self.stats.time_costs.t_global)
-
-
+        self.stats.add_sys_time_os_multi(self.stats.time_costs.t_load)
 
     def load_task_to_IO(self, io, process_pid: int) -> None:
         """

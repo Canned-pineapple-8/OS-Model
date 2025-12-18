@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
 
+
 # параметры случайных величин
 @dataclass
 class RandomConfig:
     random_seed: float = 1.0
+
 
 # параметры памяти
 @dataclass
