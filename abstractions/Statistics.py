@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Dict
 from enum import Enum
-from abstractions.Process import Process, ProcessState
 from model.Config import TimeCosts
 
 # сбор статистики для отображения и вычислений
@@ -108,11 +107,13 @@ class Statistics:
         """
         self.os_stats.t_mono += value
 
-    def add_runtime_to_processes(self, proc_table_ptr: Dict[int, Process]) -> None:
+    def add_runtime_to_processes(self, proc_table_ptr) -> None:
         """
         Добавить активное/пассивное время выполнения ко всем процессам системы на каждом такте
         :param proc_table_ptr: указатель на таблицу процессов
         """
+        from abstractions.Process import ProcessState
+
         for pid, process in proc_table_ptr.items():
             if process.current_state == ProcessState.RUNNING or process.current_state == ProcessState.IO_RUNNING:
                 self.add_time_process(pid, ProcessTimeRecordType.T_ACTIVE, 1)
@@ -125,7 +126,7 @@ class Statistics:
         :param pid: PID процесса
         """
         if pid not in self.process_stats:
-            self.process_stats[pid] = ProcessTimeStats()
+            self.process_stats[pid] = self.proc_table[pid].stats
         self.process_stats[pid].t_start = self.os_stats.t_multi
 
     def add_process_end_time(self, pid: int):

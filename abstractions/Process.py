@@ -3,6 +3,7 @@ from devices.Memory import Memory
 from utils.RandomFactory import RandomFactory
 from abstractions.Command import Command, IOCommand, ExitCommand, ALUCommand, OpType
 from dataclasses import dataclass
+from abstractions.Statistics import ProcessTimeStats
 
 class ProcessState(Enum):
     NEW = 0  # только создан ("загружается")
@@ -79,7 +80,7 @@ class Process:
             process_commands_config if process_commands_config is not None else ProcessCommandsConfig()
         )
 
-        self.stats = None  # статистика
+        self.stats = ProcessTimeStats()  # статистика
         self.current_command = None  # текущая команда процесса
         return
 

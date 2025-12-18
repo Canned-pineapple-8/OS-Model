@@ -247,12 +247,6 @@ class OSUI(QMainWindow):
         except Exception:
             pass
 
-        # обновление параметров процессов
-        try:
-            self.process_params_widget.refresh()
-        except Exception:
-            pass
-
         # обновление параметров системы
         try:
             self.sys_params.refresh()

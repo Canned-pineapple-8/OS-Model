@@ -32,7 +32,8 @@ class OSModel:
         self.stats = Statistics(self.config.time_costs, self.proc_table)
 
         # устанавливаем сид для воспроизводимости значений
-        random.seed(self.config.random.random_seed)
+        if self.config.random.random_seed != -1:
+            random.seed(self.config.random.random_seed)
 
         self.physical_memory = Memory(self.config.memory.total_memory, self.stats)  # структура эмулирующая
         # физическую память процессов

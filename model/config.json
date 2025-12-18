@@ -43,8 +43,8 @@
     },
 
   "time_costs": {
-    "t_next": 0.05,
-    "t_state": 0.05,
+    "t_next": 0.1,
+    "t_state": 0.1,
     "t_init_io": 0.1,
     "t_end_io": 0.1,
     "t_load": 0.1,

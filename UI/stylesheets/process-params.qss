@@ -2,7 +2,7 @@ ProcessParamsWidget {
     background-color: #121217;
 }
 
-ProcessParamsWidget QLabel#title {
+ProcessParamsWidget QLabel {
     background-color: transparent;
     color: #f0f0f0;
     font-family: 'Cascadia Mono';
@@ -88,4 +88,16 @@ QScrollBar::sub-line:horizontal {
 QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal {
     background: none;
+}
+
+#UpdateButton {
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+    background-color: #ff6f61;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+#UpdateButton:hover {
+    background-color: #ff8978;
 }
