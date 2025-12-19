@@ -1,0 +1,103 @@
+ProcessParamsWidget {
+    background-color: #121217;
+}
+
+ProcessParamsWidget QLabel {
+    background-color: transparent;
+    color: #f0f0f0;
+    font-family: 'Cascadia Mono';
+}
+
+ProcessParamsWidget QScrollArea#params_scroll {
+    background-color: #1c1c22;
+    border-radius: 5px;
+    border: none;
+}
+
+KeyValuePanel {
+    background-color: #1c1c22;
+}
+
+KeyValuePanel QLabel[role="key"] {
+    color: #cfd8dc;
+    font-family: 'Cascadia Mono';
+}
+
+KeyValuePanel QLabel[role="value"] {
+    color: #f0f0f0;
+    font-family: 'Cascadia Mono';
+}
+
+QWidget {
+    background-color: #1c1c22;
+}
+
+QScrollArea {
+     background-color: #1c1c22;
+     border: none;
+}
+
+QScrollBar:vertical {
+    background: #1c1c22;
+    width: 10px;
+    margin: 0px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    background: #3a3a44;
+    min-height: 24px;
+    border-radius: 5px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #50505c;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    background: #1c1c22;
+    height: 10px;
+    margin: 0px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #3a3a44;
+    min-width: 24px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #50505c;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+#UpdateButton {
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+    background-color: #ff6f61;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+#UpdateButton:hover {
+    background-color: #ff8978;
+}

@@ -1,5 +1,5 @@
 from model.Config import *
-
+from typing import Optional
 
 class Speed:
     def __init__(self, config: OSConfig) -> None:
@@ -30,6 +30,21 @@ class Speed:
         elif new_speed < self.min_speed:
             new_speed = self.min_speed
 
+        self.speed = new_speed
+        return self.speed
+
+    def change_speed_to_value(self, value: float) -> Optional[float]:
+        """
+        Установить скорость в конкретное значение
+        :param value: новое значение скорости
+        """
+        if value <= 0:
+            return
+        new_speed = value
+        if new_speed > self.max_speed:
+            new_speed = self.max_speed
+        elif new_speed < self.min_speed:
+            new_speed = self.min_speed
         self.speed = new_speed
         return self.speed
 

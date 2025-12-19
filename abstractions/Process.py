@@ -3,7 +3,7 @@ from devices.Memory import Memory
 from utils.RandomFactory import RandomFactory
 from abstractions.Command import Command, IOCommand, ExitCommand, ALUCommand, OpType
 from dataclasses import dataclass
-
+from abstractions.Statistics import ProcessTimeStats
 
 class ProcessState(Enum):
     NEW = 0  # только создан ("загружается")
@@ -12,9 +12,10 @@ class ProcessState(Enum):
     TERMINATED = 3  # завершен ("отсутствует")
     IO_INIT = 4  # инициализация ввода-вывода
     IO_END = 5  # конец ввода-вывода
-    MEM_BLOCKED = 6  # блокирован по обращению к памяти
+    STOPPED_IO = 6  # приостановлен (был на IO)
     IO_BLOCKED = 7  # блокирован по вводу-выводу
-    STOPPED = 8  # приостановлен
+    STOPPED_CPU = 8  # приостановлен (был на CPU)
+    IO_RUNNING = 9  # команда ввода-вывода активно выполняется
 
 
 @dataclass
@@ -79,6 +80,7 @@ class Process:
             process_commands_config if process_commands_config is not None else ProcessCommandsConfig()
         )
 
+        self.stats = ProcessTimeStats()  # статистика
         self.current_command = None  # текущая команда процесса
         return
 

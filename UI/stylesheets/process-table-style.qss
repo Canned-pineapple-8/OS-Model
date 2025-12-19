@@ -1,7 +1,7 @@
 QDialog { background-color: #121217; }
 
 QTableCornerButton::section {
-    background-color: #262630;   /* или любой другой */
+    background-color: #262630;
     border: none;
 }
 
@@ -12,7 +12,6 @@ QScrollBar:vertical {
     border-radius: 5px;
 }
 
-/* Ползунок */
 QScrollBar::handle:vertical {
     background: #3a3a44;
     min-height: 24px;
@@ -22,13 +21,11 @@ QScrollBar::handle:vertical:hover {
     background: #50505c;
 }
 
-/* Отключаем кнопки вверх/вниз */
 QScrollBar::add-line:vertical,
 QScrollBar::sub-line:vertical {
     height: 0px;
 }
 
-/* Трек над/под ползунком */
 QScrollBar::add-page:vertical,
 QScrollBar::sub-page:vertical {
     background: none;

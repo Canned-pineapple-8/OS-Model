@@ -68,14 +68,10 @@ class CPU:
         """
         Выполняет один такт текущего процесса
         """
-        if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
+        if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED \
+                or self.current_process.current_state == ProcessState.STOPPED_CPU:
             return
         self.total_commands_executed += 1
-        self.ticks_executed += 1
-        if self.ticks_executed == self.quantum_size:
-            interrupt = Interrupt(InterruptType.QUANTUM_ENDED, self.current_process.pid, self.device_id)
-            self.interrupt_handler.raise_interrupt(interrupt)
-            return
         command = self.current_process.generate_command()
         match command:
             case ALUCommand(addr1=addr1, addr2=addr2, opType=opType):
@@ -88,11 +84,17 @@ class CPU:
                 interrupt = Interrupt(InterruptType.PROCESS_TERMINATED,
                                       self.current_process.pid, self.device_id)
                 self.interrupt_handler.raise_interrupt(interrupt)
+                return
             case IOCommand():
                 self.current_process.process_statistics.io_commands_counter += 1
                 self.current_process.process_statistics.total_commands_counter += 1
                 interrupt = Interrupt(InterruptType.PROCESS_IO_INIT,
                                       self.current_process.pid, self.device_id)
                 self.interrupt_handler.raise_interrupt(interrupt)
+                return
             case _:
                 raise RuntimeError("Неизвестный тип команды")
+        self.ticks_executed += 1
+        if self.ticks_executed == self.quantum_size:
+            interrupt = Interrupt(InterruptType.QUANTUM_ENDED, self.current_process.pid, self.device_id)
+            self.interrupt_handler.raise_interrupt(interrupt)

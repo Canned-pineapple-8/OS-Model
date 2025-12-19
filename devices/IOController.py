@@ -22,7 +22,6 @@ class IOController:
 
         self.interrupt_handler: Optional[InterruptHandler] = None  # указатель на обработчик прерываний
 
-
     @property
     def current_process(self) -> Optional[Process]:
         """

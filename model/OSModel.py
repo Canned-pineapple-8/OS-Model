@@ -1,18 +1,21 @@
 import json
 import time
+import random
+from typing import Optional
 
 from model.Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
-    ProcessGenerationConfig, CommandGenerationConfig
+    ProcessGenerationConfig, CommandGenerationConfig, RandomConfig, TimeCosts
 from abstractions.Speed import Speed
 from managers.Scheduler import Scheduler
 from devices.CPU import CPU, CPUState
 from devices.IOController import IOController, IOControllerState
 from managers.MemoryManager import MemoryManager
-from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig
+from abstractions.Process import Process, ProcessCommandsConfig, ProcessMemoryConfig, ProcessState
 from utils.RandomFactory import RandomFactory
 from devices.Memory import Memory
 from managers.InterruptHandler import InterruptHandler
 from managers.Dispatcher import Dispatcher
+from abstractions.Statistics import Statistics, ProcessTimeStats, ProcessTimeRecordType
 
 
 class OSModel:
@@ -23,11 +26,18 @@ class OSModel:
         """
         self.running = False
 
-        self.config = self.load_config(config_path)
-
-        self.physical_memory = Memory(self.config.memory.total_memory)  # структура эмулирующая
-        # физическую память процессов
         self.proc_table = dict()  # таблица процессов: dict [int, Process] (Доступ по PID)
+
+        self.config = self.load_config(config_path)
+        # статистика
+        self.stats = Statistics(self.config.time_costs, self.proc_table)
+
+        # устанавливаем сид для воспроизводимости значений
+        if self.config.random.random_seed != -1:
+            random.seed(self.config.random.random_seed)
+
+        self.physical_memory = Memory(self.config.memory.total_memory, self.stats)  # структура эмулирующая
+        # физическую память процессов
         self.proc_table_size = self.config.memory.proc_table_size  # максимальное число процессов
         self.memory_manager = MemoryManager(self.physical_memory, self.proc_table)  # класс для управления памятью
         # процессов
@@ -38,15 +48,17 @@ class OSModel:
         self.io_controllers = [IOController(i) for i in range(self.config.io.ios_num)]
 
         self.speed_manager = Speed(self.config)  # инициализация параметров, связанных со скоростью
-        self.scheduler = Scheduler()  # инициализация планировщика и его структур
+        self.scheduler = Scheduler(self.stats)  # инициализация планировщика и его структур
 
         # регулировщик
-        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler)
+        self.dispatcher = Dispatcher(self.memory_manager, self.cpus, self.io_controllers, self.scheduler, self.stats)
         # обработчик прерываний
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
-                                                  self.dispatcher, self.memory_manager)
+                                                  self.dispatcher, self.memory_manager, self.stats)
 
+        self.loading_processes_enabled = True
         self.running = True
+        self.kill_on_finishing = False
         return
 
     def load_config(self, path: str) -> OSConfig:
@@ -74,7 +86,9 @@ class OSModel:
             io=load_section(IOConfig, "io"),
             speed=load_section(SpeedConfig, "speed"),
             process_generation=load_section(ProcessGenerationConfig, "process_generation"),
-            command_generation=load_section(CommandGenerationConfig, "command_generation")
+            command_generation=load_section(CommandGenerationConfig, "command_generation"),
+            random=load_section(RandomConfig, "random"),
+            time_costs=load_section(TimeCosts, "time_costs")
         )
 
     @property
@@ -89,6 +103,15 @@ class OSModel:
         :return: новое значение скорости (float)
         """
         new_speed = self.speed_manager.change_speed(increase)
+        return new_speed
+
+    def change_speed_to_value(self, value: float):
+        """
+        Изменить скорость на конкретное значение
+        :param value: новое значение скорости
+        :return: новое значение скорости
+        """
+        new_speed = self.speed_manager.change_speed_to_value(value)
         return new_speed
 
     def calculate_memory_usage(self) -> int:
@@ -119,7 +142,8 @@ class OSModel:
 
         self.memory_manager.load_process(process.pid, process)
         self.scheduler.add_process_to_cpu_queue(process_pid=process.pid)
-
+        process.current_state = ProcessState.READY
+        self.stats.add_process_start_time(process.pid)
         return process.pid
 
     def perform_program_delay(self) -> None:
@@ -167,13 +191,11 @@ class OSModel:
         self.running = False
         return
 
-    def fill_processes_if_possible(self) -> None:
-        """
-        Заполняет память новыми процессами до достижения лимита.
-        """
+    def generate_process(self) -> Optional[Process]:
+        new_process = None
         new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
                                                                      self.config.process_generation.max_memory)
-        while self.calculate_available_memory() >= new_process_memory \
+        if self.calculate_available_memory() >= new_process_memory \
                 and self.memory_manager.get_current_proc_table_size() < self.proc_table_size:
             # генерация параметров
             commands_config = ProcessCommandsConfig()
@@ -194,21 +216,38 @@ class OSModel:
                                   process_commands_config=commands_config,
                                   process_memory_info=memory_config)
 
-            self.load_new_task(new_process)
-
             # выделение памяти под процесс
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
             if block_start == -1:
-                return
+                return None
 
             new_process.process_memory_config.block_start = block_start
 
             new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
             new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
-            new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
-                                                                         self.config.process_generation.max_memory)
+
+        return new_process
+
+    def fill_processes_if_possible(self) -> None:
+        """
+        Заполняет память новыми процессами до достижения лимита.
+        """
+        if not self.loading_processes_enabled:
+            return
+        process = self.generate_process()
+        try:
+            self.load_new_task(process)
+        except Exception:
+            return
+        while process is not None and self.loading_processes_enabled:
+            process = self.generate_process()
+            if process:
+                try:
+                    self.load_new_task(process)
+                except Exception:
+                    return
         return
 
     def perform_tick(self) -> None:
@@ -222,7 +261,11 @@ class OSModel:
         - регулировщик проверяет состояния IO (на всякий случай)
         - менеджер памяти освобождает ресурсы завершенных в ходе такта процессов
         """
+        if self.kill_on_finishing and len(self.proc_table) == 0:
+            self.terminate()
         self.fill_processes_if_possible()
+        self.stats.add_runtime_to_processes(self.proc_table)
+        self.stats.add_time_os_multi(1)
 
         for cpu in self.cpus:
             cpu.execute_tick()
@@ -237,6 +280,9 @@ class OSModel:
 
         for io in self.io_controllers:
             self.dispatcher.dispatch_io(io)
+
+        self.stats.recalc_system_params()
+        self.stats.recalc_avg_process_params()
 
         self.memory_manager.free_resources()
 

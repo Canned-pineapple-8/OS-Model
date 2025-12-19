@@ -2,7 +2,7 @@ from typing import *
 
 
 class Memory:
-    def __init__(self, memory_size: int) -> None:
+    def __init__(self, memory_size: int, stats) -> None:
         """
         Инициализация физической памяти
         Память моделируется как список элементов
@@ -11,6 +11,7 @@ class Memory:
         """
         self.physical_memory_size: int = memory_size
         self.physical_memory: List[Optional[int]] = [None] * memory_size
+        self.stats = stats
 
     def read(self, address:int) -> Optional[int]:
         """

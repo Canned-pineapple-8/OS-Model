@@ -1,12 +1,15 @@
 from abstractions.Process import Process, ProcessState
+from abstractions.Statistics import Statistics, ProcessTimeRecordType
+
 
 # класс, моделирующий работу регулировщика
 class Dispatcher:
-    def __init__(self, memory_manager, cpus, ios, scheduler):
+    def __init__(self, memory_manager, cpus, ios, scheduler, stats: Statistics):
         self.memory_manager = memory_manager  # указатель на менеджера памяти
         self.cpus_ptr = cpus  # указатель на центральные процессоры
         self.ios_ptr = ios  # указатель на контроллеры ввода-вывода
         self.scheduler = scheduler  # указатель на планировщика
+        self.stats = stats
 
     def change_process_state(self, process_pid:int, new_state:ProcessState) -> None:
         """
@@ -16,6 +19,10 @@ class Dispatcher:
         """
         process = self.memory_manager.get_process(process_pid)
         if process:
+            if process.current_state != new_state:
+                self.stats.add_time_os_multi(self.stats.time_costs.t_state)
+                self.stats.add_sys_time_os_multi(self.stats.time_costs.t_state)
+
             process.current_state = new_state
 
     def save_process_state_word(self, process_state_word: Process) -> None:
@@ -42,6 +49,9 @@ class Dispatcher:
         process = self.restore_process_state_word(process_pid)
         cpu.current_process = process
         self.change_process_state(process_pid, ProcessState.RUNNING)
+        self.stats.add_time_process(process_pid, ProcessTimeRecordType.T_SYS_MONO, self.stats.time_costs.t_load)
+        self.stats.add_time_os_multi(self.stats.time_costs.t_load)
+        self.stats.add_sys_time_os_multi(self.stats.time_costs.t_load)
 
     def load_task_to_IO(self, io, process_pid: int) -> None:
         """
@@ -51,7 +61,7 @@ class Dispatcher:
         """
         process = self.restore_process_state_word(process_pid)
         io.current_process = process
-        self.change_process_state(process_pid, ProcessState.IO_BLOCKED)
+        self.change_process_state(process_pid, ProcessState.IO_RUNNING)
 
     def unload_task(self, device) -> int:
         """

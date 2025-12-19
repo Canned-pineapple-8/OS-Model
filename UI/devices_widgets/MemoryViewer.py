@@ -4,10 +4,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt, QSize, QTimer
 
-
 MONO_FONT = "Cascadia Mono"
 
 
+# виджет отображения памяти
 class MemoryViewer(QDialog):
     def __init__(self, memory_manager):
         super().__init__()
@@ -22,24 +22,14 @@ class MemoryViewer(QDialog):
 
         self.process_colors = {}
         self.color_palette = [
-            "#8BC34A",  # зеленый
-            "#42A5F5",  # голубой
-            "#26A69A",  # бирюзовый
+            "#8BC34A",
+            "#42A5F5",
+            "#26A69A",
 
-            "#4CAF50",  # насыщенный зеленый
-            "#AB47BC",  # фиолетовый
-            "#FFA726",  # оранжево-янтарный
+            "#4CAF50",
+            "#AB47BC",
+            "#FFA726",
         ]
-
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #121217;
-            }
-            QWidget {
-                background-color: #121217;
-                color: #f0f0f0;
-            }
-        """)
 
         layout = QVBoxLayout(self)
 
@@ -60,6 +50,15 @@ class MemoryViewer(QDialog):
         self.timer.timeout.connect(self.update_view)
         self.timer.start(300)
 
+        self.setObjectName("MemoryViewer")
+
+        try:
+            with open("UI/stylesheets/memory-viewer-style.qss", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        except Exception:
+            pass
+
+    # ротация цветов
     def get_color_for_pid(self, pid):
         if pid not in self.process_colors:
             color = self.color_palette[
@@ -68,6 +67,7 @@ class MemoryViewer(QDialog):
             self.process_colors[pid] = color
         return self.process_colors[pid]
 
+    # расчёт размеров ячеек
     def create_cells(self):
         total = self.memory.physical_memory_size
         cell_size = 32
@@ -77,7 +77,10 @@ class MemoryViewer(QDialog):
             label.setFixedSize(QSize(cell_size, cell_size))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setFont(QFont(MONO_FONT, 9))
-            label.setAutoFillBackground(True)
+
+            label.setObjectName("MemoryCell")
+            label.setProperty("state", "free")
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             row = index // self.columns
             col = index % self.columns
@@ -85,6 +88,7 @@ class MemoryViewer(QDialog):
             self.grid.addWidget(label, row, col)
             self.labels.append(label)
 
+    # обновление
     def update_view(self):
         total = self.memory.physical_memory_size
 

@@ -1,6 +1,12 @@
 from dataclasses import dataclass, field
 
 
+# параметры случайных величин
+@dataclass
+class RandomConfig:
+    random_seed: float = 1.0
+
+
 # параметры памяти
 @dataclass
 class MemoryConfig:
@@ -52,6 +58,18 @@ class CommandGenerationConfig:
     result_block_shift: int = 2
 
 
+# временные затраты ОС на выполнение служебных операций (в тактах)
+@dataclass
+class TimeCosts:
+    t_next: float = 1  # затраты на выбор процесса для исполнения
+    t_state: float = 1  # затраты на переключение состояния процесса
+    t_init_io: float = 1  # затраты на инициализацию ввода-вывода
+    t_end_io: float = 1  # затраты по обслуживанию сигнала окончания
+    # ввода-вывода
+    t_load: float = 1  # затраты на загрузку нового задания
+    t_global: float = 1  # затраты на общение с общими данными
+
+
 # основная структура-конфигурация
 @dataclass
 class OSConfig:
@@ -61,3 +79,5 @@ class OSConfig:
     speed: SpeedConfig = field(default_factory=SpeedConfig)
     process_generation: ProcessGenerationConfig = field(default_factory=ProcessGenerationConfig)
     command_generation: CommandGenerationConfig = field(default_factory=CommandGenerationConfig)
+    random: RandomConfig = field(default_factory=RandomConfig)
+    time_costs: TimeCosts = field(default_factory=TimeCosts)

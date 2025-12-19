@@ -1,7 +1,7 @@
 {
   "memory": {
     "total_memory": 500,
-    "proc_table_size": 30
+    "proc_table_size": 20
   },
 
   "cpu": {
@@ -36,5 +36,18 @@
     "operand_max": 10,
     "operands_block_shift": 0,
     "result_block_shift": 2
+  },
+
+  "random": {
+      "random_seed": 5
+    },
+
+  "time_costs": {
+    "t_next": 0.1,
+    "t_state": 0.1,
+    "t_init_io": 0.1,
+    "t_end_io": 0.1,
+    "t_load": 0.1,
+    "t_global": 0.05
   }
 }
