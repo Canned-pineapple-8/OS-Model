@@ -68,7 +68,8 @@ class CPU:
         """
         Выполняет один такт текущего процесса
         """
-        if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED:
+        if self.current_process is None or self.current_process.current_state == ProcessState.TERMINATED \
+                or self.current_process.current_state == ProcessState.STOPPED_CPU:
             return
         self.total_commands_executed += 1
         command = self.current_process.generate_command()

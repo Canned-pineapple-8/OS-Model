@@ -141,8 +141,10 @@ class Statistics:
         process.t_multi = process.t_end - process.t_start
         process.t_sys_multi = process.t_multi - process.t_active - process.t_passive
         process.t_mono = process.t_active + process.t_sys_mono
-        process.d_exe = process.t_multi / process.t_mono * 100
-        process.d_ready = process.t_passive / process.t_multi * 100
+        if process.t_mono:
+            process.d_exe = process.t_multi / process.t_mono * 100
+        if process.t_multi:
+            process.d_ready = process.t_passive / process.t_multi * 100
 
     def recalc_system_params(self):
         """

@@ -7,6 +7,11 @@ class InterruptType(Enum):
     PROCESS_TERMINATED = 1   # завершился процесс
     PROCESS_IO_INIT = 2  # процесс требует ввода-вывода
     PROCESS_IO_END = 3  # операция ввода-вывода процесса завершилась
+    PROCESS_STOPPED_IO = 4  # выполнение процесса приостановлено пользователем (IO)
+    PROCESS_STOPPED_CPU = 5  # выполнение процесса приостановлено пользователем (CPU)
+    PROCESS_RESUMED_CPU = 6  # процесс возобновлен (на CPU)
+    PROCESS_RESUMED_IO = 7  # процесс возобновлен (на IO)
+    PROCESS_KILLED = 8  # процесс остановлен пользователем
 
 
 class Interrupt:

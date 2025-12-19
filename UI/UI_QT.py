@@ -13,6 +13,8 @@ from UI.devices_widgets.MemoryViewer import MemoryViewer
 from UI.parameters_widgets.SystemParametersWidget import SystemParamsWidget
 from UI.parameters_widgets.ProcessParametersWidget import ProcessParamsWidget
 
+from abstractions.Control import InstructionExecutor
+
 MONO_FONT = "Cascadia Mono"
 
 
@@ -22,6 +24,7 @@ class OSUI(QMainWindow):
         self.os_model = os_model
         self.setWindowTitle("Модель ОС")
         self.resize(1200, 740)
+        self.instruction_handler = InstructionExecutor(self.os_model, self)
 
         # центральный виджет + основной layout
         central = QWidget()
@@ -91,7 +94,7 @@ class OSUI(QMainWindow):
         cmd_layout = QHBoxLayout()
         self.cmd_entry = QLineEdit()
         self.cmd_entry.setFont(QFont(MONO_FONT, 11))
-        self.cmd_entry.setPlaceholderText("speed+, speed-, terminate, /?")
+        self.cmd_entry.setPlaceholderText("help, speed+, speed-, terminate etc.")
         self.cmd_entry.returnPressed.connect(self.process_command)
         cmd_layout.addWidget(self.cmd_entry)
 
@@ -262,29 +265,14 @@ class OSUI(QMainWindow):
         self.append_text(f"> {cmd}")
 
         try:
-            if cmd == "speed+":
-                s = self.os_model.change_speed(True)
-                self.append_text(f"Скорость увеличена до {s:.2f}")
-            elif cmd == "speed-":
-                s = self.os_model.change_speed(False)
-                self.append_text(f"Скорость уменьшена до {s:.2f}")
-            elif cmd == "terminate":
-                self.append_text("Завершение...")
-                try:
-                    self.os_model.terminate()
-                except Exception:
-                    pass
-                self.close()
-            elif cmd == "/?":
-                self.append_text("Доступные команды:\n"
-                                 "speed+      — увеличить скорость моделирования\n"
-                                 "speed-      — уменьшить скорость\n"
-                                 "terminate   — завершить моделирование\n"
-                                 "/?          — показать справку")
-            else:
-                self.append_text("Неизвестная команда!")
+            instruction = self.instruction_handler.parse(cmd)
         except Exception as e:
             self.append_text(f"Ошибка: {e}")
+            return
+
+        msg = self.instruction_handler.execute(command=instruction)
+        if msg != "":
+            self.append_text(msg)
 
     # закрытие окна
     def closeEvent(self, event):

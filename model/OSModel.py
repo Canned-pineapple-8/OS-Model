@@ -1,6 +1,7 @@
 import json
 import time
 import random
+from typing import Optional
 
 from model.Config import OSConfig, MemoryConfig, CPUConfig, IOConfig, SpeedConfig, \
     ProcessGenerationConfig, CommandGenerationConfig, RandomConfig, TimeCosts
@@ -55,7 +56,9 @@ class OSModel:
         self.interrupt_handler = InterruptHandler(self.cpus, self.io_controllers, self.scheduler,
                                                   self.dispatcher, self.memory_manager, self.stats)
 
+        self.loading_processes_enabled = True
         self.running = True
+        self.kill_on_finishing = False
         return
 
     def load_config(self, path: str) -> OSConfig:
@@ -100,6 +103,15 @@ class OSModel:
         :return: новое значение скорости (float)
         """
         new_speed = self.speed_manager.change_speed(increase)
+        return new_speed
+
+    def change_speed_to_value(self, value: float):
+        """
+        Изменить скорость на конкретное значение
+        :param value: новое значение скорости
+        :return: новое значение скорости
+        """
+        new_speed = self.speed_manager.change_speed_to_value(value)
         return new_speed
 
     def calculate_memory_usage(self) -> int:
@@ -179,13 +191,11 @@ class OSModel:
         self.running = False
         return
 
-    def fill_processes_if_possible(self) -> None:
-        """
-        Заполняет память новыми процессами до достижения лимита.
-        """
+    def generate_process(self) -> Optional[Process]:
+        new_process = None
         new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
                                                                      self.config.process_generation.max_memory)
-        while self.calculate_available_memory() >= new_process_memory \
+        if self.calculate_available_memory() >= new_process_memory \
                 and self.memory_manager.get_current_proc_table_size() < self.proc_table_size:
             # генерация параметров
             commands_config = ProcessCommandsConfig()
@@ -206,21 +216,38 @@ class OSModel:
                                   process_commands_config=commands_config,
                                   process_memory_info=memory_config)
 
-            self.load_new_task(new_process)
-
             # выделение памяти под процесс
             block_start = self.memory_manager.allocate_memory_for_process(new_process.pid,
                                                                           new_process.process_memory_config.block_size)
 
             if block_start == -1:
-                return
+                return None
 
             new_process.process_memory_config.block_start = block_start
 
             new_process.process_memory_config.result_block_address = block_start + self.config.command_generation.result_block_shift
             new_process.process_memory_config.operands_block_address = block_start + self.config.command_generation.operands_block_shift
-            new_process_memory = RandomFactory.generate_random_int_value(self.config.process_generation.min_memory,
-                                                                         self.config.process_generation.max_memory)
+
+        return new_process
+
+    def fill_processes_if_possible(self) -> None:
+        """
+        Заполняет память новыми процессами до достижения лимита.
+        """
+        if not self.loading_processes_enabled:
+            return
+        process = self.generate_process()
+        try:
+            self.load_new_task(process)
+        except Exception:
+            return
+        while process is not None and self.loading_processes_enabled:
+            process = self.generate_process()
+            if process:
+                try:
+                    self.load_new_task(process)
+                except Exception:
+                    return
         return
 
     def perform_tick(self) -> None:
@@ -234,6 +261,8 @@ class OSModel:
         - регулировщик проверяет состояния IO (на всякий случай)
         - менеджер памяти освобождает ресурсы завершенных в ходе такта процессов
         """
+        if self.kill_on_finishing and len(self.proc_table) == 0:
+            self.terminate()
         self.fill_processes_if_possible()
         self.stats.add_runtime_to_processes(self.proc_table)
         self.stats.add_time_os_multi(1)
@@ -252,9 +281,9 @@ class OSModel:
         for io in self.io_controllers:
             self.dispatcher.dispatch_io(io)
 
-        self.memory_manager.free_resources()
-
         self.stats.recalc_system_params()
         self.stats.recalc_avg_process_params()
+
+        self.memory_manager.free_resources()
 
         return
