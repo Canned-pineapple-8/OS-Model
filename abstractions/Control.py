@@ -2,6 +2,7 @@ from model.OSModel import OSModel
 from abc import ABC, abstractmethod
 from typing import Optional
 
+
 class Instruction(ABC):
     @abstractmethod
     def execute(self, os_model:OSModel, osui) -> str:
@@ -12,18 +13,7 @@ class InstructionExecutor:
     def __init__(self, os_model:OSModel, osui):
         self.os_model = os_model
         self.osui = osui
-        self.parser = CommandParser()
 
-    def parse(self, instruction:str):
-        command = self.parser.parse(instruction)
-        return command
-
-    def execute(self, command: Instruction) -> str:
-        result = command.execute(self.os_model, self.osui)
-        return result
-
-
-class CommandParser:
     def parse(self, line: str) -> Optional[Instruction]:
         err_message = "неизвестная команда"
         parts = line.strip().split()
@@ -105,60 +95,85 @@ class CommandParser:
 
         raise ValueError(err_message)
 
+    def execute(self, command: Instruction) -> str:
+        result = command.execute(self.os_model, self.osui)
+        return result
+
 
 class Terminate(Instruction):
+    """
+    Выполняет немедленное завершение работы модели
+    """
     def execute(self, os_model, osui):
-        os_model.terminate()
-        osui.close()
-        return ""
+        os_model.terminate()  # вызов метода завершения ОС
+        return "Работа модели завершена."
 
 
 class TerminateProcess(Instruction):
+    """
+    Уничтожает процесс с переданным PID
+    """
     def __init__(self, pid: int):
         self.pid = pid
 
     def execute(self, os_model:OSModel, osui) -> str:
         from abstractions.Interrupt import InterruptType, Interrupt
-        if self.pid not in os_model.proc_table:
+        if self.pid not in os_model.proc_table:  # проверка на корректность PID
             return f"Процесса с PID {self.pid} не существует"
-        interrupt = Interrupt(InterruptType.PROCESS_KILLED, self.pid, -1)
+        interrupt = Interrupt(InterruptType.PROCESS_KILLED, self.pid, -1)  # вызов прерывания соответствующего типа
         os_model.interrupt_handler.raise_interrupt(interrupt)
         return f"Процесса с PID {self.pid} уничтожен"
 
 
 class ChangeSpeed(Instruction):
+    """
+    Меняет скорость модели (либо на шаг, либо на конкретное значение)
+    """
     def __init__(self, increase: bool, value: float = None):
         self.increase = increase
         self.value = value
 
     def execute(self, os_model:OSModel, osui) -> str:
         if self.value is not None:
-            speed = os_model.change_speed_to_value(self.value)
+            os_model.change_speed_to_value(self.value)  # установка скорости в конкретное значение
             return f"Скорость равна {os_model.speed:.3f}"
         else:
-            speed = os_model.change_speed(self.increase)
+            os_model.change_speed(self.increase)  # увеличение/уменьшение скорости на шаг
             return f"Скорость равна {os_model.speed:.3f}"
 
 
 class StopLoading(Instruction):
+    """
+    Останавливает автоматическую загрузку новых процессов
+    """
     def execute(self, os_model:OSModel, osui) -> str:
         os_model.loading_processes_enabled = False
         return "Загрузка новых процессов приостановлена"
 
 
 class FinishKill(Instruction):
+    """
+    Останавливает автоматическую загрузку новых процессов и завершает работу системы после их выполнения
+    """
     def execute(self, os_model:OSModel, osui) -> str:
         os_model.loading_processes_enabled = False
         os_model.kill_on_finishing = True
         return "Загрузка новых процессов приостановлена. После завершения выполнения текущих процессов модель закончит работу."
 
+
 class ContinueLoading(Instruction):
+    """
+    Возобновляет автоматическую генерацию процессов
+    """
     def execute(self, os_model:OSModel, osui) -> str:
         os_model.loading_processes_enabled = True
         return "Загрузка новых процессов включена"
 
 
 class GenerateNewTask(Instruction):
+    """
+    Загружает новое задание со случайными параметрами в систему
+    """
     def execute(self, os_model:OSModel, osui) -> str:
         process = os_model.generate_process()
         if process is None:
@@ -171,6 +186,9 @@ class GenerateNewTask(Instruction):
 
 
 class StopTask(Instruction):
+    """
+    Приостанавливает выполнение процесса (только для тех, что выполняются в данный момент)
+    """
     def __init__(self, pid: int):
         self.pid = pid
 
@@ -179,13 +197,13 @@ class StopTask(Instruction):
         from abstractions.Interrupt import InterruptType, Interrupt
         if self.pid not in os_model.proc_table:
             return f"Процесса с PID {self.pid} не существует"
-        if os_model.proc_table[self.pid].current_state == ProcessState.RUNNING:
+        if os_model.proc_table[self.pid].current_state == ProcessState.RUNNING:  # процесс выполняется на ЦПр
             for cpu in os_model.cpus:
                 if cpu.current_process and cpu.current_process.pid == self.pid:
                     interrupt = Interrupt(InterruptType.PROCESS_STOPPED_CPU, self.pid, cpu.device_id)
                     os_model.interrupt_handler.raise_interrupt(interrupt)
             return f"Процесс с PID {self.pid} остановлен"
-        if os_model.proc_table[self.pid].current_state == ProcessState.IO_RUNNING:
+        if os_model.proc_table[self.pid].current_state == ProcessState.IO_RUNNING:  # процесс выполняет команду ввода-вывода
             for io in os_model.io_controllers:
                 if io.current_process and io.current_process.pid == self.pid:
                     interrupt = Interrupt(InterruptType.PROCESS_STOPPED_IO, self.pid, io.device_id)
@@ -195,6 +213,9 @@ class StopTask(Instruction):
 
 
 class ResumeTask(Instruction):
+    """
+    Возобновляет выполнение остановленного процесса
+    """
     def __init__(self, pid: int):
         self.pid = pid
 
@@ -213,7 +234,11 @@ class ResumeTask(Instruction):
             return f"Процесс с PID {self.pid} возобновлен"
         return f"Процесс с PID {self.pid} не был остановлен"
 
+
 class SetRandomSeed(Instruction):
+    """
+    Устанавливает сид для случайных вычислений
+    """
     def __init__(self, seed: int):
         self.seed = seed
 
@@ -223,7 +248,11 @@ class SetRandomSeed(Instruction):
         os_model.config.random.random_seed = self.seed
         return f"Генератор случайных чисел инициализирован значением {self.seed}"
 
+
 class Help(Instruction):
+    """
+    Показывает справку
+    """
     def execute(self, os_model: OSModel, osui) -> str:
         return (
             "Доступные команды:\n\n"
